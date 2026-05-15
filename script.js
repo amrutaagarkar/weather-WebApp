@@ -1,4 +1,3 @@
-
 //making object of weatherapi
 const weatherApi = {
     key: '4eb3703790b356562054106543b748b2',
@@ -154,3 +153,6 @@ function addZero(i) {
     }
     return i;
 }
+
+
+
