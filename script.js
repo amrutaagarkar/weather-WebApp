@@ -167,37 +167,37 @@ function changeBg(status) {
 
     if (status === 'Clouds') {
 
-        document.body.style.backgroundImage = "url('./img/clouds.jpg')";
+        document.body.style.backgroundImage = "url('clouds.jpg')";
 
     }
 
     else if (status === 'Rain') {
 
-        document.body.style.backgroundImage = "url('./img/rainy.jpg')";
+        document.body.style.backgroundImage = "url('rainy.jpg')";
 
     }
 
     else if (status === 'Clear') {
 
-        document.body.style.backgroundImage = "url('./img/clear.jpg')";
+        document.body.style.backgroundImage = "url('clear.jpg')";
 
     }
 
     else if (status === 'Snow') {
 
-        document.body.style.backgroundImage = "url('./img/snow.jpg')";
+        document.body.style.backgroundImage = "url('snow.jpg')";
 
     }
 
     else if (status === 'Thunderstorm') {
 
-        document.body.style.backgroundImage = "url('./img/thunderstorm.jpg')";
+        document.body.style.backgroundImage = "url('thunderstorm.jpg')";
 
     }
 
     else if (status === 'Drizzle') {
 
-        document.body.style.backgroundImage = "url('./img/drizzle.jpg')";
+        document.body.style.backgroundImage = "url('drizzle.jpg')";
 
     }
 
@@ -207,15 +207,20 @@ function changeBg(status) {
         status === 'Fog'
     ) {
 
-        document.body.style.backgroundImage = "url('./img/mist.jpg')";
+        document.body.style.backgroundImage = "url('mist.jpg')";
 
     }
 
     else {
 
-        document.body.style.backgroundImage = "url('./img/bg.jpg')";
+        document.body.style.backgroundImage = "url('bg.jpg')";
 
     }
+
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundPosition = "center";
+    document.body.style.backgroundRepeat = "no-repeat";
+}
 }
 
 // Weather Icon Function
