@@ -216,7 +216,7 @@ function changeBg(status){
 
     else if(status === 'Rain'){
 
-        document.body.style.backgroundImage = "url('rain.jpg')";
+        document.body.style.backgroundImage = "url('rainy.jpg')";
     }
 
     else if(status === 'Clear'){
