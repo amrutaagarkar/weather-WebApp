@@ -1,15 +1,12 @@
-// WeatherAPI.com
-
 const weatherApi = {
 
     key: "8cd2f882afd3427383e171546261605",
 
     baseUrl:
         "https://api.weatherapi.com/v1/forecast.json"
-
 };
 
-// Input Box
+// Input
 
 let searchInputBox =
     document.getElementById("input-box");
@@ -35,8 +32,6 @@ function getWeather(city) {
         .then(data => {
 
             console.log(data);
-
-            // Error Handling
 
             if (data.error) {
 
@@ -76,17 +71,11 @@ function showWeather(data) {
 
     weatherBody.style.display = "block";
 
-    // Current Weather
-
     let current =
         data.current;
 
-    // Location
-
     let location =
         data.location;
-
-    // Forecast
 
     let forecast =
         data.forecast.forecastday;
@@ -124,8 +113,7 @@ function showWeather(data) {
 
             <img
                 src="https:${current.condition.icon}"
-                width="60"
-            >
+                width="60">
 
         </div>
 
@@ -138,26 +126,22 @@ function showWeather(data) {
 
     </div>
 
-    <hr>
+    <hr><br>
 
     <div class="day-details">
 
-        <div class="basic">
+        Humidity:
+        ${current.humidity}% <br><br>
 
-            Humidity
-            ${current.humidity}% <br>
+        Wind:
+        ${current.wind_kph} KM/H <br><br>
 
-            Wind
-            ${current.wind_kph} KM/H <br>
-
-            Pressure
-            ${current.pressure_mb} mb
-
-        </div>
+        Pressure:
+        ${current.pressure_mb} mb
 
     </div>
 
-    <hr>
+    <br><hr>
 
     <div class="forecast">
 
@@ -169,12 +153,6 @@ function showWeather(data) {
     `;
 
     showForecast(forecast);
-
-    changeBg(
-        current.condition.text
-    );
-
-    reset();
 
 }
 
@@ -203,7 +181,7 @@ function showForecast(forecastData) {
                 ${date.toLocaleDateString(
                     'en-US',
                     {
-                        weekday: 'short'
+                        weekday:'short'
                     }
                 )}
 
@@ -211,8 +189,7 @@ function showForecast(forecastData) {
 
             <img
                 src="https:${day.day.condition.icon}"
-                width="50"
-            >
+                width="50">
 
             <p>
 
@@ -233,74 +210,5 @@ function showForecast(forecastData) {
             forecastCard;
 
     });
-
-}
-
-// Change Background
-
-function changeBg(status) {
-
-    status =
-        status.toLowerCase();
-
-    // Clouds
-
-    if (
-        status.includes("cloud")
-    ) {
-
-        document.body.style.backgroundImage =
-            "url('clouds.jpg')";
-    }
-
-    // Rain
-
-    else if (
-        status.includes("rain") ||
-        status.includes("drizzle")
-    ) {
-
-        document.body.style.backgroundImage =
-            "url('rainy.jpg')";
-    }
-
-    // Clear
-
-    else if (
-        status.includes("clear") ||
-        status.includes("sun")
-    ) {
-
-        document.body.style.backgroundImage =
-            "url('clear.jpg')";
-    }
-
-    // Snow
-
-    else if (
-        status.includes("snow")
-    ) {
-
-        document.body.style.backgroundImage =
-            "url('snow.jpg')";
-    }
-
-    // Default
-
-    else {
-
-        document.body.style.backgroundImage =
-            "url('bg1.jpg')";
-    }
-
-}
-
-// Reset Input
-
-function reset() {
-
-    document.getElementById(
-        "input-box"
-    ).value = "";
 
 }
