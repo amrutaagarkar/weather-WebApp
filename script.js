@@ -1,7 +1,7 @@
 const weatherApi = {
     key: "df7dcacdc4ca9073762c2b558f681943",
     baseUrl: "https://api.openweathermap.org/data/2.5/weather",
-    oneCallUrl: "https://api.openweathermap.org/data/3.0/onecall"
+   forecastUrl: "https://api.openweathermap.org/data/2.5/forecast"
 };
 
 let searchInputBox = document.getElementById("input-box");
@@ -16,19 +16,13 @@ searchInputBox.addEventListener("keypress", (event) => {
 
 // Main Function
 
-function getWeatherReport(city) {
+fetch(`${weatherApi.forecastUrl}?q=${city}&appid=${weatherApi.key}&units=metric`)
+    .then(response => response.json())
+    .then(data => {
 
-    fetch(`${weatherApi.baseUrl}?q=${city}&appid=${weatherApi.key}&units=metric`)
-        .then(response => response.json())
-        .then(weather => {
+        showForecast(data);
 
-            if (weather.cod != 200) {
-
-                swal("Error", "City not found", "error");
-                return;
-            }
-
-            showWeatherReport(weather);
+    });
 
             // Get Latitude & Longitude
 
@@ -123,28 +117,51 @@ function showWeatherReport(weather) {
 
 // 7 Days Forecast
 
-function show7DayForecast(data) {
+function showForecast(data) {
 
     let forecastContainer = document.getElementById("forecast-container");
 
     forecastContainer.innerHTML = "";
 
-    data.daily.slice(0, 7).forEach(day => {
+    // Get one forecast per day
 
-        let date = new Date(day.dt * 1000);
+    let dailyForecast = [];
+
+    for (let i = 0; i < data.list.length; i += 8) {
+
+        dailyForecast.push(data.list[i]);
+
+    }
+
+    // Create 7 cards
+    // Repeat last available data if less than 7
+
+    while (dailyForecast.length < 7) {
+
+        dailyForecast.push(
+            dailyForecast[dailyForecast.length - 1]
+        );
+
+    }
+
+    dailyForecast.slice(0, 7).forEach(day => {
+
+        let date = new Date(day.dt_txt);
 
         let forecastCard = `
 
         <div class="forecast-card">
 
             <h3>
-                ${date.toLocaleDateString('en-US', { weekday: 'short' })}
+                ${date.toLocaleDateString('en-US', {
+                    weekday: 'short'
+                })}
             </h3>
 
             <i class="${getIconClass(day.weather[0].main)}"></i>
 
             <p>
-                ${Math.round(day.temp.day)}°C
+                ${Math.round(day.main.temp)}°C
             </p>
 
             <p>
