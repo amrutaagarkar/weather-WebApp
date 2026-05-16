@@ -1,22 +1,22 @@
-// Weather API
+// Tomorrow.io Weather API
 
 const weatherApi = {
-    key: "df7dcacdc4ca9073762c2b558f681943",
-    baseUrl: "https://api.openweathermap.org/data/2.5/weather",
-    forecastUrl: "https://api.openweathermap.org/data/2.5/forecast"
+    key: "6a08177016f04e7dafc0f183",
+    baseUrl: "https://api.tomorrow.io/v4/weather/forecast"
 };
 
 // Search Input
 
-let searchInputBox = document.getElementById("input-box");
+let searchInputBox =
+    document.getElementById("input-box");
 
-// Enter Key Event
+// Enter Key
 
 searchInputBox.addEventListener("keypress", (event) => {
 
     if (event.key === "Enter") {
 
-        getWeatherReport(searchInputBox.value);
+        getWeather(searchInputBox.value);
 
     }
 
@@ -24,60 +24,74 @@ searchInputBox.addEventListener("keypress", (event) => {
 
 // Get Weather
 
-function getWeatherReport(city) {
+function getWeather(city) {
 
-    // Current Weather
-
-    fetch(`${weatherApi.baseUrl}?q=${city}&appid=${weatherApi.key}&units=metric`)
-        .then(response => response.json())
-        .then(weather => {
-
-            console.log(weather);
-
-            if (weather.cod != 200) {
-
-                swal("Error", "City not found", "error");
-                return;
-            }
-
-            showWeatherReport(weather);
-
-        });
-
-    // Forecast Weather
-
-    fetch(`${weatherApi.forecastUrl}?q=${city}&appid=${weatherApi.key}&units=metric`)
+    fetch(`${weatherApi.baseUrl}?location=${city}&apikey=${weatherApi.key}`)
         .then(response => response.json())
         .then(data => {
 
             console.log(data);
 
-            showForecast(data);
+            // Check Error
+
+            if (!data.timelines) {
+
+                swal("Error", "City not found", "error");
+
+                return;
+            }
+
+            showWeather(data);
+
+        })
+
+        .catch(error => {
+
+            console.log(error);
+
+            swal("Error", "Something went wrong", "error");
 
         });
 
 }
 
-// Show Current Weather
+// Show Weather
 
-function showWeatherReport(weather) {
+function showWeather(data) {
 
-    let weather_body = document.getElementById("weather-body");
+    let weatherBody =
+        document.getElementById("weather-body");
 
-    weather_body.style.display = "block";
+    weatherBody.style.display = "block";
+
+    // Current Weather
+
+    let current =
+        data.timelines.minutely[0].values;
+
+    // Daily Forecast
+
+    let daily =
+        data.timelines.daily;
+
+    // Today's Date
 
     let todayDate = new Date();
 
-    weather_body.innerHTML = `
+    weatherBody.innerHTML = `
 
     <div class="location-deatils">
 
         <div class="city">
-            ${weather.name}, ${weather.sys.country}
+
+            Weather Forecast
+
         </div>
 
         <div class="date">
-            ${dateManage(todayDate)}
+
+            ${todayDate.toDateString()}
+
         </div>
 
     </div>
@@ -85,17 +99,21 @@ function showWeatherReport(weather) {
     <div class="weather-status">
 
         <div class="temp">
-            ${Math.round(weather.main.temp)}°C
+
+            ${Math.round(current.temperature)}°C
+
         </div>
 
         <div class="weather">
-            ${weather.weather[0].main}
-            <i class="${getIconClass(weather.weather[0].main)}"></i>
+
+            Humidity ${current.humidity}%
+
         </div>
 
         <div class="min-max">
-            ${Math.floor(weather.main.temp_min)}°C /
-            ${Math.ceil(weather.main.temp_max)}°C
+
+            Wind ${current.windSpeed} KM/H
+
         </div>
 
     </div>
@@ -106,10 +124,9 @@ function showWeatherReport(weather) {
 
         <div class="basic">
 
-            Feels like ${weather.main.feels_like}°C |
-            Humidity ${weather.main.humidity}% <br>
+            Pressure ${current.pressureSurfaceLevel} mb <br>
 
-            Wind ${weather.wind.speed} KM/H
+            Visibility ${current.visibility} KM
 
         </div>
 
@@ -119,14 +136,16 @@ function showWeatherReport(weather) {
 
     <div class="forecast">
 
-        <h2>7-Day Forecast</h2>
+        <h2>5-Day Forecast</h2>
 
         <div id="forecast-container"></div>
 
     </div>
     `;
 
-    changeBg(weather.weather[0].main);
+    showForecast(daily);
+
+    changeBg(current.weatherCode);
 
     reset();
 
@@ -134,191 +153,111 @@ function showWeatherReport(weather) {
 
 // Show Forecast
 
-function showForecast(data) {
+function showForecast(dailyData) {
 
-    setTimeout(() => {
+    let forecastContainer =
+        document.getElementById("forecast-container");
 
-        let forecastContainer =
-            document.getElementById("forecast-container");
+    forecastContainer.innerHTML = "";
 
-        if (!forecastContainer) {
+    // First 5 Days
 
-            console.log("Forecast container not found");
+    dailyData.slice(0, 5).forEach(day => {
 
-            return;
-        }
+        let date = new Date(day.time);
 
-        forecastContainer.innerHTML = "";
+        let forecastCard = `
 
-        let dailyForecast = [];
+        <div class="forecast-card">
 
-        // Get one forecast every 24 hours
+            <h3>
 
-        for (let i = 0; i < data.list.length; i += 8) {
+                ${date.toLocaleDateString('en-US', {
+                    weekday: 'short'
+                })}
 
-            dailyForecast.push(data.list[i]);
+            </h3>
 
-        }
+            <p>
 
-        // Make 7 cards
+                🌡 Max ${Math.round(day.values.temperatureMax)}°C
 
-        while (dailyForecast.length < 7) {
+            </p>
 
-            dailyForecast.push(
-                dailyForecast[dailyForecast.length - 1]
-            );
+            <p>
 
-        }
+                ❄ Min ${Math.round(day.values.temperatureMin)}°C
 
-        dailyForecast.slice(0, 7).forEach(day => {
+            </p>
 
-            let date = new Date(day.dt_txt);
+            <p>
 
-            let forecastCard = `
+                🌧 Rain ${day.values.precipitationProbability}%
 
-            <div class="forecast-card">
+            </p>
 
-                <h3>
-                    ${date.toLocaleDateString('en-US', {
-                        weekday: 'short'
-                    })}
-                </h3>
+        </div>
+        `;
 
-                <i class="${getIconClass(day.weather[0].main)}"></i>
+        forecastContainer.innerHTML += forecastCard;
 
-                <p>
-                    ${Math.round(day.main.temp)}°C
-                </p>
+    });
 
-                <p>
-                    ${day.weather[0].main}
-                </p>
-
-            </div>
-            `;
-
-            forecastContainer.innerHTML += forecastCard;
-
-        });
-
-    }, 500);
-
-}
-
-// Date Function
-
-function dateManage(dateArg) {
-
-    let days = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday"
-    ];
-
-    let months = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December"
-    ];
-
-    let day = days[dateArg.getDay()];
-    let date = dateArg.getDate();
-    let month = months[dateArg.getMonth()];
-    let year = dateArg.getFullYear();
-
-    return `${date} ${month} (${day}), ${year}`;
 }
 
 // Change Background
 
-function changeBg(status) {
+function changeBg(code) {
 
-    if (status === "Clouds") {
+    // Clear
 
-        document.body.style.backgroundImage =
-            "url('clouds.jpg')";
-    }
-
-    else if (status === "Rain") {
-
-        document.body.style.backgroundImage =
-            "url('rainy.jpg')";
-    }
-
-    else if (status === "Clear") {
+    if (code === 1000) {
 
         document.body.style.backgroundImage =
             "url('clear.jpg')";
     }
 
-    else if (status === "Snow") {
+    // Cloudy
+
+    else if (
+        code === 1001 ||
+        code === 1100 ||
+        code === 1101 ||
+        code === 1102
+    ) {
+
+        document.body.style.backgroundImage =
+            "url('clouds.jpg')";
+    }
+
+    // Rain
+
+    else if (
+        code >= 4000 &&
+        code < 5000
+    ) {
+
+        document.body.style.backgroundImage =
+            "url('rainy.jpg')";
+    }
+
+    // Snow
+
+    else if (
+        code >= 5000 &&
+        code < 7000
+    ) {
 
         document.body.style.backgroundImage =
             "url('snow.jpg')";
     }
 
+    // Default
+
     else {
 
         document.body.style.backgroundImage =
             "url('bg1.jpg')";
-    }
-
-}
-
-// Weather Icons
-
-function getIconClass(weatherType) {
-
-    if (weatherType === "Rain") {
-
-        return "fas fa-cloud-rain";
-    }
-
-    else if (weatherType === "Clouds") {
-
-        return "fas fa-cloud";
-    }
-
-    else if (weatherType === "Clear") {
-
-        return "fas fa-sun";
-    }
-
-    else if (weatherType === "Snow") {
-
-        return "fas fa-snowflake";
-    }
-
-    else if (weatherType === "Thunderstorm") {
-
-        return "fas fa-bolt";
-    }
-
-    else if (
-        weatherType === "Mist" ||
-        weatherType === "Fog" ||
-        weatherType === "Haze"
-    ) {
-
-        return "fas fa-smog";
-    }
-
-    else {
-
-        return "fas fa-cloud-sun";
     }
 
 }
