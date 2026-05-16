@@ -1,395 +1,343 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-    <title>Weather App</title>
+<title>Weather App</title>
 
-    <!-- CSS -->
+<style>
 
-    <style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
 
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-        }
+body{
 
-        body{
+font-family:Arial,sans-serif;
 
-            font-family:Arial,sans-serif;
+background:linear-gradient(
+to right,
+#1d4350,
+#a43931
+);
 
-            background:#0f2027;
-            background:linear-gradient(
-                to right,
-                #2c5364,
-                #203a43,
-                #0f2027
-            );
+min-height:100vh;
 
-            min-height:100vh;
+display:flex;
 
-            display:flex;
+justify-content:center;
 
-            justify-content:center;
+align-items:center;
 
-            align-items:center;
+padding:20px;
+}
 
-            padding:20px;
-        }
+.app{
 
-        .app-main{
+width:100%;
 
-            width:100%;
-            max-width:900px;
+max-width:900px;
 
-            background:rgba(255,255,255,0.1);
+background:rgba(255,255,255,0.1);
 
-            backdrop-filter:blur(10px);
+padding:25px;
 
-            border-radius:20px;
+border-radius:20px;
 
-            padding:25px;
+backdrop-filter:blur(10px);
 
-            color:white;
-        }
+color:white;
+}
 
-        .header h2{
+h1{
 
-            text-align:center;
+text-align:center;
 
-            margin-bottom:20px;
+margin-bottom:20px;
+}
 
-            font-size:35px;
-        }
+input{
 
-        .input-box{
+width:100%;
 
-            width:100%;
+padding:15px;
 
-            padding:15px;
+border:none;
 
-            border:none;
+outline:none;
 
-            outline:none;
+border-radius:10px;
 
-            border-radius:10px;
+font-size:18px;
 
-            font-size:18px;
+margin-bottom:20px;
+}
 
-            margin-bottom:25px;
-        }
+#weather{
 
-        .weather-body{
+display:none;
+}
 
-            display:none;
-        }
+.temp{
 
-        .temp{
+font-size:70px;
 
-            font-size:70px;
+font-weight:bold;
 
-            font-weight:bold;
+margin:20px 0;
+}
 
-            margin:20px 0;
-        }
+.condition{
 
-        .weather{
+font-size:25px;
 
-            font-size:24px;
+margin-bottom:15px;
+}
 
-            margin-bottom:15px;
-        }
+.details{
 
-        .details{
+line-height:2;
+}
 
-            line-height:2;
-        }
+.forecast-container{
 
-        #forecast-container{
+display:flex;
 
-            display:flex;
+gap:15px;
 
-            gap:15px;
+overflow-x:auto;
 
-            overflow-x:auto;
+margin-top:20px;
+}
 
-            margin-top:20px;
+.card{
 
-            padding-bottom:10px;
-        }
+min-width:140px;
 
-        .forecast-card{
+background:rgba(255,255,255,0.15);
 
-            min-width:140px;
+padding:15px;
 
-            background:rgba(255,255,255,0.15);
+border-radius:15px;
 
-            padding:15px;
+text-align:center;
+}
 
-            border-radius:15px;
+.card img{
 
-            text-align:center;
+width:55px;
+}
 
-            flex-shrink:0;
-        }
-
-        .forecast-card img{
-
-            width:55px;
-        }
-
-    </style>
+</style>
 
 </head>
 
 <body>
 
-    <div class="app-main">
+<div class="app">
 
-        <div class="header">
+<h1>Weather App</h1>
 
-            <h2>Weather App</h2>
+<input
+type="text"
+id="city"
+placeholder="Enter city name">
 
-        </div>
+<div id="weather"></div>
 
-        <input
-            type="text"
-            id="input-box"
-            class="input-box"
-            placeholder="Enter city name">
+</div>
 
-        <div
-            class="weather-body"
-            id="weather-body">
+<script>
 
-        </div>
+const apiKey =
+"9b14b2cbfdfa41f6b63172731261605";
 
-    </div>
+const input =
+document.getElementById("city");
 
-    <!-- Sweet Alert -->
+input.addEventListener(
+"keypress",
+function(event){
 
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+if(event.key === "Enter"){
 
-    <!-- JavaScript -->
+getWeather(input.value);
 
-    <script>
+}
 
-        // Weather API
+}
+);
 
-        const apiKey =
-            "8cd2f882afd3427383e171546261605";
+function getWeather(city){
 
-        // Input
+fetch(
+`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=no&alerts=no`
+)
 
-        let searchInputBox =
-            document.getElementById("input-box");
+.then(response => response.json())
 
-        // Enter Key
+.then(data => {
 
-        searchInputBox.addEventListener(
-            "keypress",
-            (event) => {
+console.log(data);
 
-                if(event.key === "Enter"){
+if(data.error){
 
-                    getWeather(
-                        searchInputBox.value
-                    );
+alert(data.error.message);
 
-                }
+return;
+}
 
-            }
-        );
+showWeather(data);
 
-        // Get Weather
+})
 
-        function getWeather(city){
+.catch(error => {
 
-            fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=no&alerts=no`)
-            .then(response => response.json())
-            .then(data => {
+console.log(error);
 
-                console.log(data);
+alert("Weather fetch failed");
 
-                // Error
+});
 
-                if(data.error){
+}
 
-                    swal(
-                        "Error",
-                        data.error.message,
-                        "error"
-                    );
+function showWeather(data){
 
-                    return;
-                }
+const weather =
+document.getElementById("weather");
 
-                showWeather(data);
+weather.style.display =
+"block";
 
-            })
+let current =
+data.current;
 
-            .catch(error => {
+let location =
+data.location;
 
-                console.log(error);
+let forecast =
+data.forecast.forecastday;
 
-                swal(
-                    "Error",
-                    "Failed to fetch weather",
-                    "error"
-                );
+weather.innerHTML = `
 
-            });
+<h2>
 
-        }
+${location.name},
+${location.country}
 
-        // Show Weather
+</h2>
 
-        function showWeather(data){
+<p>
 
-            let weatherBody =
-                document.getElementById(
-                    "weather-body"
-                );
+${location.localtime}
 
-            weatherBody.style.display =
-                "block";
+</p>
 
-            let current =
-                data.current;
+<div class="temp">
 
-            let location =
-                data.location;
+${current.temp_c}°C
 
-            let forecast =
-                data.forecast.forecastday;
+</div>
 
-            weatherBody.innerHTML = `
+<div class="condition">
 
-            <h2>
+${current.condition.text}
 
-                ${location.name},
-                ${location.country}
+<img
+src="https:${current.condition.icon}">
 
-            </h2>
+</div>
 
-            <p>
+<div class="details">
 
-                ${location.localtime}
+Humidity:
+${current.humidity}% <br>
 
-            </p>
+Wind:
+${current.wind_kph} KM/H <br>
 
-            <div class="temp">
+Pressure:
+${current.pressure_mb} mb <br>
 
-                ${current.temp_c}°C
+Feels Like:
+${current.feelslike_c}°C
 
-            </div>
+</div>
 
-            <div class="weather">
+<hr style="margin:20px 0;">
 
-                ${current.condition.text}
+<h2>
 
-                <img
-                    src="https:${current.condition.icon}">
-            </div>
+7-Day Forecast
 
-            <div class="details">
+</h2>
 
-                Humidity:
-                ${current.humidity}% <br>
+<div class="forecast-container"
+id="forecast">
 
-                Wind:
-                ${current.wind_kph} KM/H <br>
+</div>
+`;
 
-                Pressure:
-                ${current.pressure_mb} mb <br>
+showForecast(forecast);
 
-                Feels Like:
-                ${current.feelslike_c}°C
+}
 
-            </div>
+function showForecast(days){
 
-            <hr style="margin:20px 0;">
+const forecast =
+document.getElementById("forecast");
 
-            <h2>
+forecast.innerHTML = "";
 
-                7-Day Forecast
+days.forEach(day => {
 
-            </h2>
+let date =
+new Date(day.date);
 
-            <div id="forecast-container">
+forecast.innerHTML += `
 
-            </div>
-            `;
+<div class="card">
 
-            showForecast(forecast);
+<h3>
 
-        }
+${date.toLocaleDateString(
+'en-US',
+{
+weekday:'short'
+}
+)}
 
-        // Forecast
+</h3>
 
-        function showForecast(forecastData){
+<img
+src="https:${day.day.condition.icon}">
 
-            let forecastContainer =
-                document.getElementById(
-                    "forecast-container"
-                );
+<p>
 
-            forecastContainer.innerHTML =
-                "";
+${day.day.avgtemp_c}°C
 
-            forecastData.forEach(day => {
+</p>
 
-                let date =
-                    new Date(day.date);
+<p>
 
-                let forecastCard = `
+${day.day.condition.text}
 
-                <div class="forecast-card">
+</p>
 
-                    <h3>
+</div>
+`;
 
-                        ${date.toLocaleDateString(
-                            'en-US',
-                            {
-                                weekday:'short'
-                            }
-                        )}
+});
 
-                    </h3>
+}
 
-                    <img
-                        src="https:${day.day.condition.icon}">
-
-                    <p>
-
-                        ${day.day.avgtemp_c}°C
-
-                    </p>
-
-                    <p>
-
-                        ${day.day.condition.text}
-
-                    </p>
-
-                </div>
-                `;
-
-                forecastContainer.innerHTML +=
-                    forecastCard;
-
-            });
-
-        }
-
-    </script>
+</script>
 
 </body>
-
 </html>
