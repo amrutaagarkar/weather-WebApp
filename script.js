@@ -1,10 +1,14 @@
 // Tomorrow.io Weather API
 
 const weatherApi = {
-    key: "6a08177016f04e7dafc0f183",
-    baseUrl: "https://api.tomorrow.io/v4/weather/forecast"
-};
 
+    key: "6a08177016f04e7dafc0f183",
+
+    baseUrl: "https://api.tomorrow.io/v4/weather/forecast",
+
+    realtimeUrl: "https://api.tomorrow.io/v4/weather/realtime"
+
+};
 // Search Input
 
 let searchInputBox =
@@ -23,25 +27,39 @@ searchInputBox.addEventListener("keypress", (event) => {
 });
 
 // Get Weather
-
 function getWeather(city) {
 
-    fetch(`${weatherApi.baseUrl}?location=${city}&apikey=${weatherApi.key}`)
+    // Convert City → Coordinates
+
+    fetch(`https://api.tomorrow.io/v4/weather/realtime?location=${city}&apikey=${weatherApi.key}`)
         .then(response => response.json())
         .then(data => {
 
             console.log(data);
 
-            // Check Error
-
-            if (!data.timelines) {
+            if (!data.data) {
 
                 swal("Error", "City not found", "error");
 
                 return;
             }
 
-            showWeather(data);
+            // Get coordinates
+
+            let lat = data.location.lat;
+            let lon = data.location.lon;
+
+            // Forecast API using coordinates
+
+            fetch(`${weatherApi.baseUrl}?location=${lat},${lon}&apikey=${weatherApi.key}`)
+                .then(response => response.json())
+                .then(forecastData => {
+
+                    console.log(forecastData);
+
+                    showWeather(forecastData);
+
+                });
 
         })
 
