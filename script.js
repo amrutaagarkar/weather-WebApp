@@ -1,15 +1,15 @@
-// Tomorrow.io Weather API
+// API CONFIG
 
 const weatherApi = {
 
     key: "6a08177016f04e7dafc0f183",
 
-    baseUrl: "https://api.tomorrow.io/v4/weather/forecast",
-
-    realtimeUrl: "https://api.tomorrow.io/v4/weather/realtime"
+    forecastUrl:
+        "https://api.tomorrow.io/v4/weather/forecast"
 
 };
-// Search Input
+
+// Input Box
 
 let searchInputBox =
     document.getElementById("input-box");
@@ -27,37 +27,52 @@ searchInputBox.addEventListener("keypress", (event) => {
 });
 
 // Get Weather
+
 function getWeather(city) {
 
-    // Convert City → Coordinates
+    // Get Coordinates from GeoDB API
 
-    fetch(`https://api.tomorrow.io/v4/weather/realtime?location=${city}&apikey=${weatherApi.key}`)
+    fetch(`https://geodb-free-service.wirefreethought.com/v1/geo/cities?namePrefix=${city}&limit=1`)
         .then(response => response.json())
-        .then(data => {
+        .then(locationData => {
 
-            console.log(data);
+            console.log(locationData);
 
-            if (!data.data) {
+            if (
+                !locationData.data ||
+                locationData.data.length === 0
+            ) {
 
                 swal("Error", "City not found", "error");
 
                 return;
             }
 
-            // Get coordinates
+            // Coordinates
 
-            let lat = data.location.lat;
-            let lon = data.location.lon;
+            let lat =
+                locationData.data[0].latitude;
 
-            // Forecast API using coordinates
+            let lon =
+                locationData.data[0].longitude;
 
-            fetch(`${weatherApi.baseUrl}?location=${lat},${lon}&apikey=${weatherApi.key}`)
+            // City Name
+
+            let cityName =
+                locationData.data[0].city;
+
+            // Weather API
+
+            fetch(`${weatherApi.forecastUrl}?location=${lat},${lon}&apikey=${weatherApi.key}`)
                 .then(response => response.json())
-                .then(forecastData => {
+                .then(weatherData => {
 
-                    console.log(forecastData);
+                    console.log(weatherData);
 
-                    showWeather(forecastData);
+                    showWeather(
+                        weatherData,
+                        cityName
+                    );
 
                 });
 
@@ -67,7 +82,11 @@ function getWeather(city) {
 
             console.log(error);
 
-            swal("Error", "Something went wrong", "error");
+            swal(
+                "Error",
+                "Something went wrong",
+                "error"
+            );
 
         });
 
@@ -75,7 +94,7 @@ function getWeather(city) {
 
 // Show Weather
 
-function showWeather(data) {
+function showWeather(data, cityName) {
 
     let weatherBody =
         document.getElementById("weather-body");
@@ -92,7 +111,7 @@ function showWeather(data) {
     let daily =
         data.timelines.daily;
 
-    // Today's Date
+    // Date
 
     let todayDate = new Date();
 
@@ -102,7 +121,7 @@ function showWeather(data) {
 
         <div class="city">
 
-            Weather Forecast
+            ${cityName}
 
         </div>
 
@@ -169,16 +188,16 @@ function showWeather(data) {
 
 }
 
-// Show Forecast
+// Forecast
 
 function showForecast(dailyData) {
 
     let forecastContainer =
-        document.getElementById("forecast-container");
+        document.getElementById(
+            "forecast-container"
+        );
 
     forecastContainer.innerHTML = "";
-
-    // First 5 Days
 
     dailyData.slice(0, 5).forEach(day => {
 
@@ -190,21 +209,28 @@ function showForecast(dailyData) {
 
             <h3>
 
-                ${date.toLocaleDateString('en-US', {
-                    weekday: 'short'
-                })}
+                ${date.toLocaleDateString(
+                    'en-US',
+                    {
+                        weekday: 'short'
+                    }
+                )}
 
             </h3>
 
             <p>
 
-                🌡 Max ${Math.round(day.values.temperatureMax)}°C
+                🌡 Max ${Math.round(
+                    day.values.temperatureMax
+                )}°C
 
             </p>
 
             <p>
 
-                ❄ Min ${Math.round(day.values.temperatureMin)}°C
+                ❄ Min ${Math.round(
+                    day.values.temperatureMin
+                )}°C
 
             </p>
 
@@ -217,13 +243,14 @@ function showForecast(dailyData) {
         </div>
         `;
 
-        forecastContainer.innerHTML += forecastCard;
+        forecastContainer.innerHTML +=
+            forecastCard;
 
     });
 
 }
 
-// Change Background
+// Background Change
 
 function changeBg(code) {
 
@@ -284,6 +311,8 @@ function changeBg(code) {
 
 function reset() {
 
-    document.getElementById("input-box").value = "";
+    document.getElementById(
+        "input-box"
+    ).value = "";
 
 }
