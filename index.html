@@ -10,11 +10,141 @@
 
     <title>Weather App</title>
 
-    <link rel="stylesheet" href="style.css">
+    <!-- CSS -->
 
-    <!-- Sweet Alert -->
+    <style>
 
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+
+            font-family:Arial,sans-serif;
+
+            background:#0f2027;
+            background:linear-gradient(
+                to right,
+                #2c5364,
+                #203a43,
+                #0f2027
+            );
+
+            min-height:100vh;
+
+            display:flex;
+
+            justify-content:center;
+
+            align-items:center;
+
+            padding:20px;
+        }
+
+        .app-main{
+
+            width:100%;
+            max-width:900px;
+
+            background:rgba(255,255,255,0.1);
+
+            backdrop-filter:blur(10px);
+
+            border-radius:20px;
+
+            padding:25px;
+
+            color:white;
+        }
+
+        .header h2{
+
+            text-align:center;
+
+            margin-bottom:20px;
+
+            font-size:35px;
+        }
+
+        .input-box{
+
+            width:100%;
+
+            padding:15px;
+
+            border:none;
+
+            outline:none;
+
+            border-radius:10px;
+
+            font-size:18px;
+
+            margin-bottom:25px;
+        }
+
+        .weather-body{
+
+            display:none;
+        }
+
+        .temp{
+
+            font-size:70px;
+
+            font-weight:bold;
+
+            margin:20px 0;
+        }
+
+        .weather{
+
+            font-size:24px;
+
+            margin-bottom:15px;
+        }
+
+        .details{
+
+            line-height:2;
+        }
+
+        #forecast-container{
+
+            display:flex;
+
+            gap:15px;
+
+            overflow-x:auto;
+
+            margin-top:20px;
+
+            padding-bottom:10px;
+        }
+
+        .forecast-card{
+
+            min-width:140px;
+
+            background:rgba(255,255,255,0.15);
+
+            padding:15px;
+
+            border-radius:15px;
+
+            text-align:center;
+
+            flex-shrink:0;
+        }
+
+        .forecast-card img{
+
+            width:55px;
+        }
+
+    </style>
 
 </head>
 
@@ -24,19 +154,15 @@
 
         <div class="header">
 
-            <h4>Weather App</h4>
+            <h2>Weather App</h2>
 
         </div>
 
-        <div class="searchInputBox">
-
-            <input
-                type="text"
-                id="input-box"
-                class="input-box"
-                placeholder="Enter city name">
-
-        </div>
+        <input
+            type="text"
+            id="input-box"
+            class="input-box"
+            placeholder="Enter city name">
 
         <div
             class="weather-body"
@@ -46,7 +172,223 @@
 
     </div>
 
-    <script src="script.js"></script>
+    <!-- Sweet Alert -->
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <!-- JavaScript -->
+
+    <script>
+
+        // Weather API
+
+        const apiKey =
+            "8cd2f882afd3427383e171546261605";
+
+        // Input
+
+        let searchInputBox =
+            document.getElementById("input-box");
+
+        // Enter Key
+
+        searchInputBox.addEventListener(
+            "keypress",
+            (event) => {
+
+                if(event.key === "Enter"){
+
+                    getWeather(
+                        searchInputBox.value
+                    );
+
+                }
+
+            }
+        );
+
+        // Get Weather
+
+        function getWeather(city){
+
+            fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=no&alerts=no`)
+            .then(response => response.json())
+            .then(data => {
+
+                console.log(data);
+
+                // Error
+
+                if(data.error){
+
+                    swal(
+                        "Error",
+                        data.error.message,
+                        "error"
+                    );
+
+                    return;
+                }
+
+                showWeather(data);
+
+            })
+
+            .catch(error => {
+
+                console.log(error);
+
+                swal(
+                    "Error",
+                    "Failed to fetch weather",
+                    "error"
+                );
+
+            });
+
+        }
+
+        // Show Weather
+
+        function showWeather(data){
+
+            let weatherBody =
+                document.getElementById(
+                    "weather-body"
+                );
+
+            weatherBody.style.display =
+                "block";
+
+            let current =
+                data.current;
+
+            let location =
+                data.location;
+
+            let forecast =
+                data.forecast.forecastday;
+
+            weatherBody.innerHTML = `
+
+            <h2>
+
+                ${location.name},
+                ${location.country}
+
+            </h2>
+
+            <p>
+
+                ${location.localtime}
+
+            </p>
+
+            <div class="temp">
+
+                ${current.temp_c}°C
+
+            </div>
+
+            <div class="weather">
+
+                ${current.condition.text}
+
+                <img
+                    src="https:${current.condition.icon}">
+            </div>
+
+            <div class="details">
+
+                Humidity:
+                ${current.humidity}% <br>
+
+                Wind:
+                ${current.wind_kph} KM/H <br>
+
+                Pressure:
+                ${current.pressure_mb} mb <br>
+
+                Feels Like:
+                ${current.feelslike_c}°C
+
+            </div>
+
+            <hr style="margin:20px 0;">
+
+            <h2>
+
+                7-Day Forecast
+
+            </h2>
+
+            <div id="forecast-container">
+
+            </div>
+            `;
+
+            showForecast(forecast);
+
+        }
+
+        // Forecast
+
+        function showForecast(forecastData){
+
+            let forecastContainer =
+                document.getElementById(
+                    "forecast-container"
+                );
+
+            forecastContainer.innerHTML =
+                "";
+
+            forecastData.forEach(day => {
+
+                let date =
+                    new Date(day.date);
+
+                let forecastCard = `
+
+                <div class="forecast-card">
+
+                    <h3>
+
+                        ${date.toLocaleDateString(
+                            'en-US',
+                            {
+                                weekday:'short'
+                            }
+                        )}
+
+                    </h3>
+
+                    <img
+                        src="https:${day.day.condition.icon}">
+
+                    <p>
+
+                        ${day.day.avgtemp_c}°C
+
+                    </p>
+
+                    <p>
+
+                        ${day.day.condition.text}
+
+                    </p>
+
+                </div>
+                `;
+
+                forecastContainer.innerHTML +=
+                    forecastCard;
+
+            });
+
+        }
+
+    </script>
 
 </body>
 
