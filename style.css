@@ -128,63 +128,29 @@ body{
 
 /* Forecast Section */
 
-.forecast{
-    margin-top:25px;
+.forecast {
+    margin-top: 25px;
 }
 
-.forecast h2{
-    margin-bottom:20px;
-    font-size:1.7rem;
+#forecast-container {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding: 10px;
 }
 
-#forecast-container{
-    display:flex;
-    gap:15px;
-    overflow-x:auto;
-    padding-bottom:10px;
+.forecast-card {
+    min-width: 120px;
+    padding: 15px;
+    border-radius: 15px;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    text-align: center;
 }
 
-.forecast-card{
-    min-width:120px;
-    padding:15px;
-    border-radius:15px;
-
-    background:rgba(255,255,255,0.2);
-
-    backdrop-filter:blur(5px);
-
-    color:white;
-
-    transition:0.3s;
-}
-
-.forecast-card:hover{
-    transform:scale(1.05);
-}
-
-.forecast-card h3{
-    margin-bottom:10px;
-    font-size:1.2rem;
-}
-
-.forecast-card p{
-    margin:8px 0;
-}
-
-.forecast-card i{
-    font-size:28px;
-    margin-top:10px;
-}
-
-/* Scrollbar */
-
-#forecast-container::-webkit-scrollbar{
-    height:8px;
-}
-
-#forecast-container::-webkit-scrollbar-thumb{
-    background:white;
-    border-radius:10px;
+.forecast-card i {
+    font-size: 28px;
+    margin: 10px 0;
 }
 
 /* Responsive */
