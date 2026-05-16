@@ -104,18 +104,19 @@ function showWeatherReport(weather) {
 // Show Forecast
 function showForecast(data) {
 
-    const forecastContainer = document.getElementById('forecast-container');
+    let forecastContainer = document.getElementById('forecast-container');
+
+    if (!forecastContainer) {
+        return;
+    }
 
     forecastContainer.innerHTML = "";
-
-    // OpenWeather gives 3-hour interval data
-    // Taking one forecast per day
 
     const dailyData = data.list.filter(item =>
         item.dt_txt.includes("12:00:00")
     );
 
-    dailyData.slice(0, 7).forEach(day => {
+    dailyData.slice(0, 5).forEach(day => {
 
         const date = new Date(day.dt_txt);
 
