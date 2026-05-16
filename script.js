@@ -1,244 +1,216 @@
-const apiKey = "deO8t2nbwpcWWvx2rW8xAVUf0A6dbAc6";
-
-/* =========================
-   MAIN WEATHER FUNCTION
-========================= */
-async function getWeather(defaultCity = null) {
-
-  // Get city from input OR default city
-  const city =
-    defaultCity || document.getElementById("city").value;
-
-  if (!city) {
-    alert("Please enter a city");
-    return;
-  }
-
-  // Set input value automatically
-  document.getElementById("city").value = city;
-
-  const realtimeURL =
-    `https://api.tomorrow.io/v4/weather/realtime?location=${city}&apikey=${apiKey}`;
-
-  const forecastURL =
-    `https://api.tomorrow.io/v4/weather/forecast?location=${city}&apikey=${apiKey}`;
-
-  try {
-
-    /* =========================
-       REALTIME WEATHER
-    ========================= */
-
-    const res1 = await fetch(realtimeURL);
-
-    if (!res1.ok) {
-      throw new Error("City not found");
-    }
-
-    const data1 = await res1.json();
-
-    const values = data1.data.values;
-
-    const temp = Math.round(values.temperature);
-    const feels = Math.round(values.temperatureApparent);
-    const humidity = values.humidity;
-    const wind = values.windSpeed;
-    const code = values.weatherCode;
-
-    document.getElementById("location").innerText = city;
-
-    document.getElementById("temp").innerText =
-      temp + "°C";
-
-    document.getElementById("desc").innerText =
-      "Feels like " + feels + "°C";
-
-    // Optional extra details
-    if (document.getElementById("humidity")) {
-      document.getElementById("humidity").innerText =
-        humidity + "%";
-    }
-
-    if (document.getElementById("wind")) {
-      document.getElementById("wind").innerText =
-        wind + " km/h";
-    }
-
-    // Set weather theme
-    setTheme(code);
-
-    /* =========================
-       FORECAST
-    ========================= */
-
-    const res2 = await fetch(forecastURL);
-
-    const data2 = await res2.json();
-
-    // Correct forecast path
-    const daily =
-      data2.timelines.daily;
-
-    showForecast(daily);
-
-  } catch (error) {
-
-    console.log(error);
-
-    alert("Error fetching weather data");
-
-  }
-}
-
-/* =========================
-   FORECAST (5 DAYS)
-========================= */
-function showForecast(days) {
-
-  const forecastBox =
-    document.getElementById("forecast");
-
-  forecastBox.innerHTML = "";
-
-  for (let i = 1; i <= 5; i++) {
-
-    const day = days[i];
-
-    const d = day.values;
-
-    const date = new Date(day.time);
-
-    const dayName =
-      date.toLocaleDateString("en-US", {
-        weekday: "short"
-      });
-
-    const card = document.createElement("div");
-
-    card.className = "forecast-card";
-
-    card.innerHTML = `
-      <h4>${dayName}</h4>
-      <p>🌡 ${Math.round(d.temperatureAvg)}°C</p>
-      <p>🌧 ${d.precipitationProbability}%</p>
-    `;
-
-    forecastBox.appendChild(card);
-  }
-}
-
-/* =========================
-   WEATHER THEME SYSTEM
-========================= */
-function setTheme(code) {
-
-  document.body.className = "";
-
-  // Clear
-  if (code === 1000) {
-
-    document.body.classList.add("clear");
-
-  }
-
-  // Cloudy
-  else if (code >= 1001 && code <= 1102) {
-
-    document.body.classList.add("clouds");
-
-  }
-
-  // Rain
-  else if (code >= 4000 && code < 5000) {
-
-    document.body.classList.add("rainy");
-
-    startRain();
-
-  }
-
-  // Snow
-  else if (code >= 5000) {
-
-    document.body.classList.add("snowy");
-
-    startSnow();
-
-  }
-
-  // Mist/Fog
-  else {
-
-    document.body.classList.add("mist");
-
-  }
-}
-
-/* =========================
-   RAIN ANIMATION
-========================= */
-function startRain() {
-
-  for (let i = 0; i < 60; i++) {
-
-    let drop = document.createElement("div");
-
-    drop.className = "rain";
-
-    drop.style.left =
-      Math.random() * window.innerWidth + "px";
-
-    drop.style.animationDuration =
-      Math.random() * 1 + 0.5 + "s";
-
-    document.body.appendChild(drop);
-
-    setTimeout(() => {
-      drop.remove();
-    }, 2000);
-  }
-}
-
-/* =========================
-   SNOW ANIMATION
-========================= */
-function startSnow() {
-
-  for (let i = 0; i < 40; i++) {
-
-    let snow = document.createElement("div");
-
-    snow.className = "snow";
-
-    snow.style.left =
-      Math.random() * window.innerWidth + "px";
-
-    document.body.appendChild(snow);
-
-    setTimeout(() => {
-      snow.remove();
-    }, 3000);
-  }
-}
-
-/* =========================
-   ENTER KEY SUPPORT
-========================= */
-document
-  .getElementById("city")
-  .addEventListener("keypress", function (e) {
-
-    if (e.key === "Enter") {
-      getWeather();
-    }
-
-  });
-
-/* =========================
-   AUTO LOAD DEFAULT CITY
-========================= */
-window.onload = () => {
-
-  getWeather("Pune");
-
+// Weather API Object
+const weatherApi = {
+    key: '4eb3703790b356562054106543b748b2',
+    baseUrl: 'https://api.openweathermap.org/data/2.5/weather',
+    forecastUrl: 'https://api.openweathermap.org/data/2.5/forecast'
 };
+
+// Search Input
+let searchInputBox = document.getElementById('input-box');
+
+searchInputBox.addEventListener('keypress', (event) => {
+    if (event.keyCode == 13) {
+        getWeatherReport(searchInputBox.value);
+    }
+});
+
+// Current Weather Function
+function getWeatherReport(city) {
+
+    // Current Weather
+    fetch(`${weatherApi.baseUrl}?q=${city}&appid=${weatherApi.key}&units=metric`)
+        .then(weather => weather.json())
+        .then(showWeatherReport);
+
+    // Forecast Weather
+    fetch(`${weatherApi.forecastUrl}?q=${city}&appid=${weatherApi.key}&units=metric`)
+        .then(response => response.json())
+        .then(showForecast);
+}
+
+// Show Current Weather
+function showWeatherReport(weather) {
+
+    let city_code = weather.cod;
+
+    if (city_code === '400') {
+        swal("Empty Input", "Please enter any city", "error");
+        reset();
+    }
+    else if (city_code === '404') {
+        swal("Bad Input", "Entered city didn't match", "warning");
+        reset();
+    }
+    else {
+
+        let op = document.getElementById('weather-body');
+        op.style.display = 'block';
+
+        let todayDate = new Date();
+
+        let weather_body = document.getElementById('weather-body');
+
+        weather_body.innerHTML = `
+
+        <div class="location-deatils">
+            <div class="city">${weather.name}, ${weather.sys.country}</div>
+            <div class="date">${dateManage(todayDate)}</div>
+        </div>
+
+        <div class="weather-status">
+            <div class="temp">${Math.round(weather.main.temp)}&deg;C</div>
+
+            <div class="weather">
+                ${weather.weather[0].main}
+                <i class="${getIconClass(weather.weather[0].main)}"></i>
+            </div>
+
+            <div class="min-max">
+                ${Math.floor(weather.main.temp_min)}&deg;C (min) /
+                ${Math.ceil(weather.main.temp_max)}&deg;C (max)
+            </div>
+
+            <div id="updated_on">
+                Updated as of ${getTime(todayDate)}
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="day-details">
+            <div class="basic">
+                Feels like ${weather.main.feels_like}&deg;C |
+                Humidity ${weather.main.humidity}% <br>
+
+                Pressure ${weather.main.pressure} mb |
+                Wind ${weather.wind.speed} KM/H
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="forecast">
+            <h2>7-Day Forecast</h2>
+            <div id="forecast-container"></div>
+        </div>
+        `;
+
+        changeBg(weather.weather[0].main);
+
+        reset();
+    }
+}
+
+// Show Forecast
+function showForecast(data) {
+
+    const forecastContainer = document.getElementById('forecast-container');
+
+    forecastContainer.innerHTML = "";
+
+    // OpenWeather gives 3-hour interval data
+    // Taking one forecast per day
+
+    const dailyData = data.list.filter(item =>
+        item.dt_txt.includes("12:00:00")
+    );
+
+    dailyData.slice(0, 7).forEach(day => {
+
+        const date = new Date(day.dt_txt);
+
+        const forecastCard = `
+        <div class="forecast-card">
+
+            <h3>${date.toDateString().split(' ')[0]}</h3>
+
+            <p>${Math.round(day.main.temp)}°C</p>
+
+            <p>${day.weather[0].main}</p>
+
+            <i class="${getIconClass(day.weather[0].main)}"></i>
+
+        </div>
+        `;
+
+        forecastContainer.innerHTML += forecastCard;
+    });
+}
+
+// Time Function
+function getTime(todayDate) {
+
+    let hour = addZero(todayDate.getHours());
+    let minute = addZero(todayDate.getMinutes());
+
+    return `${hour}:${minute}`;
+}
+
+// Date Function
+function dateManage(dateArg) {
+
+    let days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    let months = ['January', 'February', 'March', 'April',
+        'May', 'June', 'July', 'August',
+        'September', 'October', 'November', 'December'];
+
+    let year = dateArg.getFullYear();
+    let month = months[dateArg.getMonth()];
+    let date = dateArg.getDate();
+    let day = days[dateArg.getDay()];
+
+    return `${date} ${month} (${day}), ${year}`;
+}
+
+// Background Change
+function changeBg(status) {
+
+    if (status === 'Clouds') {
+        document.body.style.backgroundImage = 'url(img/clouds.jpg)';
+    }
+    else if (status === 'Rain') {
+        document.body.style.backgroundImage = 'url(img/rainy.jpg)';
+    }
+    else if (status === 'Clear') {
+        document.body.style.backgroundImage = 'url(img/clear.jpg)';
+    }
+    else {
+        document.body.style.backgroundImage = 'url(img/bg.jpg)';
+    }
+}
+
+// Weather Icons
+function getIconClass(classarg) {
+
+    if (classarg === 'Rain') {
+        return 'fas fa-cloud-showers-heavy';
+    }
+    else if (classarg === 'Clouds') {
+        return 'fas fa-cloud';
+    }
+    else if (classarg === 'Clear') {
+        return 'fas fa-sun';
+    }
+    else if (classarg === 'Snow') {
+        return 'fas fa-snowman';
+    }
+    else {
+        return 'fas fa-cloud-sun';
+    }
+}
+
+// Reset Input
+function reset() {
+    document.getElementById('input-box').value = "";
+}
+
+// Add Zero
+function addZero(i) {
+
+    if (i < 10) {
+        i = "0" + i;
+    }
+
+    return i;
+}
