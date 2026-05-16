@@ -1,11 +1,11 @@
-// API CONFIG
+// WeatherAPI.com
 
 const weatherApi = {
 
-    key: "6a08177016f04e7dafc0f183",
+    key: "8cd2f882afd3427383e171546261605",
 
-    forecastUrl:
-        "https://api.tomorrow.io/v4/weather/forecast"
+    baseUrl:
+        "https://api.weatherapi.com/v1/forecast.json"
 
 };
 
@@ -30,51 +30,26 @@ searchInputBox.addEventListener("keypress", (event) => {
 
 function getWeather(city) {
 
-    // Get Coordinates from GeoDB API
-
-    fetch(`https://geodb-free-service.wirefreethought.com/v1/geo/cities?namePrefix=${city}&limit=1`)
+    fetch(`${weatherApi.baseUrl}?key=${weatherApi.key}&q=${city}&days=7&aqi=no&alerts=no`)
         .then(response => response.json())
-        .then(locationData => {
+        .then(data => {
 
-            console.log(locationData);
+            console.log(data);
 
-            if (
-                !locationData.data ||
-                locationData.data.length === 0
-            ) {
+            // Error Handling
 
-                swal("Error", "City not found", "error");
+            if (data.error) {
+
+                swal(
+                    "Error",
+                    data.error.message,
+                    "error"
+                );
 
                 return;
             }
 
-            // Coordinates
-
-            let lat =
-                locationData.data[0].latitude;
-
-            let lon =
-                locationData.data[0].longitude;
-
-            // City Name
-
-            let cityName =
-                locationData.data[0].city;
-
-            // Weather API
-
-            fetch(`${weatherApi.forecastUrl}?location=${lat},${lon}&apikey=${weatherApi.key}`)
-                .then(response => response.json())
-                .then(weatherData => {
-
-                    console.log(weatherData);
-
-                    showWeather(
-                        weatherData,
-                        cityName
-                    );
-
-                });
+            showWeather(data);
 
         })
 
@@ -94,7 +69,7 @@ function getWeather(city) {
 
 // Show Weather
 
-function showWeather(data, cityName) {
+function showWeather(data) {
 
     let weatherBody =
         document.getElementById("weather-body");
@@ -104,16 +79,17 @@ function showWeather(data, cityName) {
     // Current Weather
 
     let current =
-        data.timelines.minutely[0].values;
+        data.current;
 
-    // Daily Forecast
+    // Location
 
-    let daily =
-        data.timelines.daily;
+    let location =
+        data.location;
 
-    // Date
+    // Forecast
 
-    let todayDate = new Date();
+    let forecast =
+        data.forecast.forecastday;
 
     weatherBody.innerHTML = `
 
@@ -121,13 +97,14 @@ function showWeather(data, cityName) {
 
         <div class="city">
 
-            ${cityName}
+            ${location.name},
+            ${location.country}
 
         </div>
 
         <div class="date">
 
-            ${todayDate.toDateString()}
+            ${location.localtime}
 
         </div>
 
@@ -137,19 +114,25 @@ function showWeather(data, cityName) {
 
         <div class="temp">
 
-            ${Math.round(current.temperature)}°C
+            ${current.temp_c}°C
 
         </div>
 
         <div class="weather">
 
-            Humidity ${current.humidity}%
+            ${current.condition.text}
+
+            <img
+                src="https:${current.condition.icon}"
+                width="60"
+            >
 
         </div>
 
         <div class="min-max">
 
-            Wind ${current.windSpeed} KM/H
+            Feels Like
+            ${current.feelslike_c}°C
 
         </div>
 
@@ -161,9 +144,14 @@ function showWeather(data, cityName) {
 
         <div class="basic">
 
-            Pressure ${current.pressureSurfaceLevel} mb <br>
+            Humidity
+            ${current.humidity}% <br>
 
-            Visibility ${current.visibility} KM
+            Wind
+            ${current.wind_kph} KM/H <br>
+
+            Pressure
+            ${current.pressure_mb} mb
 
         </div>
 
@@ -173,24 +161,26 @@ function showWeather(data, cityName) {
 
     <div class="forecast">
 
-        <h2>5-Day Forecast</h2>
+        <h2>7-Day Forecast</h2>
 
         <div id="forecast-container"></div>
 
     </div>
     `;
 
-    showForecast(daily);
+    showForecast(forecast);
 
-    changeBg(current.weatherCode);
+    changeBg(
+        current.condition.text
+    );
 
     reset();
 
 }
 
-// Forecast
+// Show Forecast
 
-function showForecast(dailyData) {
+function showForecast(forecastData) {
 
     let forecastContainer =
         document.getElementById(
@@ -199,9 +189,10 @@ function showForecast(dailyData) {
 
     forecastContainer.innerHTML = "";
 
-    dailyData.slice(0, 5).forEach(day => {
+    forecastData.forEach(day => {
 
-        let date = new Date(day.time);
+        let date =
+            new Date(day.date);
 
         let forecastCard = `
 
@@ -218,25 +209,20 @@ function showForecast(dailyData) {
 
             </h3>
 
+            <img
+                src="https:${day.day.condition.icon}"
+                width="50"
+            >
+
             <p>
 
-                🌡 Max ${Math.round(
-                    day.values.temperatureMax
-                )}°C
+                ${day.day.avgtemp_c}°C
 
             </p>
 
             <p>
 
-                ❄ Min ${Math.round(
-                    day.values.temperatureMin
-                )}°C
-
-            </p>
-
-            <p>
-
-                🌧 Rain ${day.values.precipitationProbability}%
+                ${day.day.condition.text}
 
             </p>
 
@@ -250,25 +236,17 @@ function showForecast(dailyData) {
 
 }
 
-// Background Change
+// Change Background
 
-function changeBg(code) {
+function changeBg(status) {
 
-    // Clear
+    status =
+        status.toLowerCase();
 
-    if (code === 1000) {
+    // Clouds
 
-        document.body.style.backgroundImage =
-            "url('clear.jpg')";
-    }
-
-    // Cloudy
-
-    else if (
-        code === 1001 ||
-        code === 1100 ||
-        code === 1101 ||
-        code === 1102
+    if (
+        status.includes("cloud")
     ) {
 
         document.body.style.backgroundImage =
@@ -278,19 +256,29 @@ function changeBg(code) {
     // Rain
 
     else if (
-        code >= 4000 &&
-        code < 5000
+        status.includes("rain") ||
+        status.includes("drizzle")
     ) {
 
         document.body.style.backgroundImage =
             "url('rainy.jpg')";
     }
 
+    // Clear
+
+    else if (
+        status.includes("clear") ||
+        status.includes("sun")
+    ) {
+
+        document.body.style.backgroundImage =
+            "url('clear.jpg')";
+    }
+
     // Snow
 
     else if (
-        code >= 5000 &&
-        code < 7000
+        status.includes("snow")
     ) {
 
         document.body.style.backgroundImage =
