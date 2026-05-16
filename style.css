@@ -157,10 +157,10 @@ body{
 
 @media screen and (max-width:900px){
 
-    .app-main{
-        width:90%;
-        padding:15px;
-    }
+   .app-main{
+    width:90%;
+    max-width:900px;
+}
 
     .header h4{
         font-size:2rem;
@@ -177,4 +177,42 @@ body{
     .forecast-card{
         min-width:100px;
     }
+}
+#forecast-container{
+    display:flex;
+    gap:15px;
+    overflow-x:auto;
+    padding:15px 5px;
+    width:100%;
+}
+
+.forecast-card{
+    min-width:110px;
+    flex-shrink:0;
+
+    background:rgba(255,255,255,0.2);
+
+    padding:15px;
+
+    border-radius:12px;
+
+    text-align:center;
+
+    color:white;
+}
+
+.forecast-card i{
+    font-size:25px;
+    margin:10px 0;
+}
+
+/* Scrollbar */
+
+#forecast-container::-webkit-scrollbar{
+    height:8px;
+}
+
+#forecast-container::-webkit-scrollbar-thumb{
+    background:white;
+    border-radius:10px;
 }
