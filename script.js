@@ -1,11 +1,10 @@
 // Weather API
 
 const weatherApi = {
-    key: "4eb3703790b356562054106543b748b2",
+    key: "df7dcacdc4ca9073762c2b558f681943",
     baseUrl: "https://api.openweathermap.org/data/2.5/weather",
     forecastUrl: "https://api.openweathermap.org/data/2.5/forecast"
 };
-
 // Input Box
 
 let searchInputBox = document.getElementById("input-box");
