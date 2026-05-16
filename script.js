@@ -264,7 +264,7 @@ function changeBg(status) {
 function getIconClass(weatherType) {
 
     if (weatherType === "Rain") {
-        return "fas fa-cloud-showers-heavy";
+        return "fas fa-cloud-rain";
     }
 
     else if (weatherType === "Clouds") {
@@ -277,6 +277,22 @@ function getIconClass(weatherType) {
 
     else if (weatherType === "Snow") {
         return "fas fa-snowflake";
+    }
+
+    else if (weatherType === "Thunderstorm") {
+        return "fas fa-bolt";
+    }
+
+    else if (weatherType === "Drizzle") {
+        return "fas fa-cloud-rain";
+    }
+
+    else if (
+        weatherType === "Mist" ||
+        weatherType === "Fog" ||
+        weatherType === "Haze"
+    ) {
+        return "fas fa-smog";
     }
 
     else {
