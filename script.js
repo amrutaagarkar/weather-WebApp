@@ -1,43 +1,58 @@
+// Weather API
+
 const weatherApi = {
     key: "df7dcacdc4ca9073762c2b558f681943",
     baseUrl: "https://api.openweathermap.org/data/2.5/weather",
-   forecastUrl: "https://api.openweathermap.org/data/2.5/forecast"
+    forecastUrl: "https://api.openweathermap.org/data/2.5/forecast"
 };
 
+// Search Input
+
 let searchInputBox = document.getElementById("input-box");
+
+// Enter Key Event
 
 searchInputBox.addEventListener("keypress", (event) => {
 
     if (event.key === "Enter") {
+
         getWeatherReport(searchInputBox.value);
+
     }
 
 });
 
-// Main Function
+// Get Weather
 
-fetch(`${weatherApi.forecastUrl}?q=${city}&appid=${weatherApi.key}&units=metric`)
-    .then(response => response.json())
-    .then(data => {
+function getWeatherReport(city) {
 
-        showForecast(data);
+    // Current Weather
 
-    });
+    fetch(`${weatherApi.baseUrl}?q=${city}&appid=${weatherApi.key}&units=metric`)
+        .then(response => response.json())
+        .then(weather => {
 
-            // Get Latitude & Longitude
+            console.log(weather);
 
-            let lat = weather.coord.lat;
-            let lon = weather.coord.lon;
+            if (weather.cod != 200) {
 
-            // 7 Days Forecast
+                swal("Error", "City not found", "error");
+                return;
+            }
 
-            fetch(`${weatherApi.oneCallUrl}?lat=${lat}&lon=${lon}&exclude=minutely,hourly,alerts&appid=${weatherApi.key}&units=metric`)
-                .then(response => response.json())
-                .then(data => {
+            showWeatherReport(weather);
 
-                    show7DayForecast(data);
+        });
 
-                });
+    // Forecast Weather
+
+    fetch(`${weatherApi.forecastUrl}?q=${city}&appid=${weatherApi.key}&units=metric`)
+        .then(response => response.json())
+        .then(data => {
+
+            console.log(data);
+
+            showForecast(data);
 
         });
 
@@ -113,83 +128,110 @@ function showWeatherReport(weather) {
 
     changeBg(weather.weather[0].main);
 
+    reset();
+
 }
 
-// 7 Days Forecast
+// Show Forecast
 
 function showForecast(data) {
 
-    let forecastContainer = document.getElementById("forecast-container");
+    setTimeout(() => {
 
-    forecastContainer.innerHTML = "";
+        let forecastContainer =
+            document.getElementById("forecast-container");
 
-    // Get one forecast per day
+        if (!forecastContainer) {
 
-    let dailyForecast = [];
+            console.log("Forecast container not found");
 
-    for (let i = 0; i < data.list.length; i += 8) {
+            return;
+        }
 
-        dailyForecast.push(data.list[i]);
+        forecastContainer.innerHTML = "";
 
-    }
+        let dailyForecast = [];
 
-    // Create 7 cards
-    // Repeat last available data if less than 7
+        // Get one forecast every 24 hours
 
-    while (dailyForecast.length < 7) {
+        for (let i = 0; i < data.list.length; i += 8) {
 
-        dailyForecast.push(
-            dailyForecast[dailyForecast.length - 1]
-        );
+            dailyForecast.push(data.list[i]);
 
-    }
+        }
 
-    dailyForecast.slice(0, 7).forEach(day => {
+        // Make 7 cards
 
-        let date = new Date(day.dt_txt);
+        while (dailyForecast.length < 7) {
 
-        let forecastCard = `
+            dailyForecast.push(
+                dailyForecast[dailyForecast.length - 1]
+            );
 
-        <div class="forecast-card">
+        }
 
-            <h3>
-                ${date.toLocaleDateString('en-US', {
-                    weekday: 'short'
-                })}
-            </h3>
+        dailyForecast.slice(0, 7).forEach(day => {
 
-            <i class="${getIconClass(day.weather[0].main)}"></i>
+            let date = new Date(day.dt_txt);
 
-            <p>
-                ${Math.round(day.main.temp)}°C
-            </p>
+            let forecastCard = `
 
-            <p>
-                ${day.weather[0].main}
-            </p>
+            <div class="forecast-card">
 
-        </div>
-        `;
+                <h3>
+                    ${date.toLocaleDateString('en-US', {
+                        weekday: 'short'
+                    })}
+                </h3>
 
-        forecastContainer.innerHTML += forecastCard;
+                <i class="${getIconClass(day.weather[0].main)}"></i>
 
-    });
+                <p>
+                    ${Math.round(day.main.temp)}°C
+                </p>
+
+                <p>
+                    ${day.weather[0].main}
+                </p>
+
+            </div>
+            `;
+
+            forecastContainer.innerHTML += forecastCard;
+
+        });
+
+    }, 500);
 
 }
 
-// Date
+// Date Function
 
 function dateManage(dateArg) {
 
     let days = [
-        "Sunday","Monday","Tuesday",
-        "Wednesday","Thursday","Friday","Saturday"
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
     ];
 
     let months = [
-        "January","February","March","April",
-        "May","June","July","August",
-        "September","October","November","December"
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
     ];
 
     let day = days[dateArg.getDay()];
@@ -200,54 +242,91 @@ function dateManage(dateArg) {
     return `${date} ${month} (${day}), ${year}`;
 }
 
-// Background Change
+// Change Background
 
 function changeBg(status) {
 
     if (status === "Clouds") {
-        document.body.style.backgroundImage = "url('img/clouds.jpg')";
+
+        document.body.style.backgroundImage =
+            "url('clouds.jpg')";
     }
 
     else if (status === "Rain") {
-        document.body.style.backgroundImage = "url('img/rainy.jpg')";
+
+        document.body.style.backgroundImage =
+            "url('rainy.jpg')";
     }
 
     else if (status === "Clear") {
-        document.body.style.backgroundImage = "url('img/clear.jpg')";
+
+        document.body.style.backgroundImage =
+            "url('clear.jpg')";
+    }
+
+    else if (status === "Snow") {
+
+        document.body.style.backgroundImage =
+            "url('snow.jpg')";
     }
 
     else {
-        document.body.style.backgroundImage = "url('img/bg1.jpg')";
+
+        document.body.style.backgroundImage =
+            "url('bg1.jpg')";
     }
 
 }
 
-// Icons
+// Weather Icons
 
 function getIconClass(weatherType) {
 
     if (weatherType === "Rain") {
+
         return "fas fa-cloud-rain";
     }
 
     else if (weatherType === "Clouds") {
+
         return "fas fa-cloud";
     }
 
     else if (weatherType === "Clear") {
+
         return "fas fa-sun";
     }
 
     else if (weatherType === "Snow") {
+
         return "fas fa-snowflake";
     }
 
     else if (weatherType === "Thunderstorm") {
+
         return "fas fa-bolt";
     }
 
+    else if (
+        weatherType === "Mist" ||
+        weatherType === "Fog" ||
+        weatherType === "Haze"
+    ) {
+
+        return "fas fa-smog";
+    }
+
     else {
+
         return "fas fa-cloud-sun";
     }
+
+}
+
+// Reset Input
+
+function reset() {
+
+    document.getElementById("input-box").value = "";
 
 }
