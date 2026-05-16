@@ -1,11 +1,8 @@
-// Weather API
-
 const weatherApi = {
     key: "df7dcacdc4ca9073762c2b558f681943",
     baseUrl: "https://api.openweathermap.org/data/2.5/weather",
-    forecastUrl: "https://api.openweathermap.org/data/2.5/forecast"
+    oneCallUrl: "https://api.openweathermap.org/data/3.0/onecall"
 };
-// Input Box
 
 let searchInputBox = document.getElementById("input-box");
 
@@ -17,11 +14,9 @@ searchInputBox.addEventListener("keypress", (event) => {
 
 });
 
-// Get Weather
+// Main Function
 
 function getWeatherReport(city) {
-
-    // Current Weather
 
     fetch(`${weatherApi.baseUrl}?q=${city}&appid=${weatherApi.key}&units=metric`)
         .then(response => response.json())
@@ -35,12 +30,19 @@ function getWeatherReport(city) {
 
             showWeatherReport(weather);
 
-            // Forecast API
+            // Get Latitude & Longitude
 
-            fetch(`${weatherApi.forecastUrl}?q=${city}&appid=${weatherApi.key}&units=metric`)
+            let lat = weather.coord.lat;
+            let lon = weather.coord.lon;
+
+            // 7 Days Forecast
+
+            fetch(`${weatherApi.oneCallUrl}?lat=${lat}&lon=${lon}&exclude=minutely,hourly,alerts&appid=${weatherApi.key}&units=metric`)
                 .then(response => response.json())
                 .then(data => {
-                    showForecast(data);
+
+                    show7DayForecast(data);
+
                 });
 
         });
@@ -74,7 +76,7 @@ function showWeatherReport(weather) {
     <div class="weather-status">
 
         <div class="temp">
-            ${Math.round(weather.main.temp)}&deg;C
+            ${Math.round(weather.main.temp)}°C
         </div>
 
         <div class="weather">
@@ -83,12 +85,8 @@ function showWeatherReport(weather) {
         </div>
 
         <div class="min-max">
-            ${Math.floor(weather.main.temp_min)}°C (min) /
-            ${Math.ceil(weather.main.temp_max)}°C (max)
-        </div>
-
-        <div>
-            Updated as of ${getTime(todayDate)}
+            ${Math.floor(weather.main.temp_min)}°C /
+            ${Math.ceil(weather.main.temp_max)}°C
         </div>
 
     </div>
@@ -102,7 +100,6 @@ function showWeatherReport(weather) {
             Feels like ${weather.main.feels_like}°C |
             Humidity ${weather.main.humidity}% <br>
 
-            Pressure ${weather.main.pressure} mb |
             Wind ${weather.wind.speed} KM/H
 
         </div>
@@ -113,7 +110,7 @@ function showWeatherReport(weather) {
 
     <div class="forecast">
 
-        <h2>5-Day Forecast</h2>
+        <h2>7-Day Forecast</h2>
 
         <div id="forecast-container"></div>
 
@@ -122,27 +119,19 @@ function showWeatherReport(weather) {
 
     changeBg(weather.weather[0].main);
 
-    reset();
-
 }
 
-// Show Forecast
+// 7 Days Forecast
 
-function showForecast(data) {
+function show7DayForecast(data) {
 
     let forecastContainer = document.getElementById("forecast-container");
 
-    if (!forecastContainer) return;
-
     forecastContainer.innerHTML = "";
 
-    let dailyData = data.list.filter(item =>
-        item.dt_txt.includes("12:00:00")
-    );
+    data.daily.slice(0, 7).forEach(day => {
 
-    dailyData.forEach(day => {
-
-        let date = new Date(day.dt_txt);
+        let date = new Date(day.dt * 1000);
 
         let forecastCard = `
 
@@ -154,9 +143,13 @@ function showForecast(data) {
 
             <i class="${getIconClass(day.weather[0].main)}"></i>
 
-            <p>${Math.round(day.main.temp)}°C</p>
+            <p>
+                ${Math.round(day.temp.day)}°C
+            </p>
 
-            <p>${day.weather[0].main}</p>
+            <p>
+                ${day.weather[0].main}
+            </p>
 
         </div>
         `;
@@ -167,33 +160,19 @@ function showForecast(data) {
 
 }
 
-// Date Function
+// Date
 
 function dateManage(dateArg) {
 
     let days = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday"
+        "Sunday","Monday","Tuesday",
+        "Wednesday","Thursday","Friday","Saturday"
     ];
 
     let months = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December"
+        "January","February","March","April",
+        "May","June","July","August",
+        "September","October","November","December"
     ];
 
     let day = days[dateArg.getDay()];
@@ -202,35 +181,6 @@ function dateManage(dateArg) {
     let year = dateArg.getFullYear();
 
     return `${date} ${month} (${day}), ${year}`;
-}
-
-// Time Function
-
-function getTime(todayDate) {
-
-    let hour = addZero(todayDate.getHours());
-    let minute = addZero(todayDate.getMinutes());
-
-    return `${hour}:${minute}`;
-}
-
-// Add Zero
-
-function addZero(i) {
-
-    if (i < 10) {
-        i = "0" + i;
-    }
-
-    return i;
-}
-
-// Reset Input
-
-function reset() {
-
-    document.getElementById("input-box").value = "";
-
 }
 
 // Background Change
@@ -247,10 +197,6 @@ function changeBg(status) {
 
     else if (status === "Clear") {
         document.body.style.backgroundImage = "url('img/clear.jpg')";
-    }
-
-    else if (status === "Snow") {
-        document.body.style.backgroundImage = "url('img/snow.jpg')";
     }
 
     else {
@@ -281,18 +227,6 @@ function getIconClass(weatherType) {
 
     else if (weatherType === "Thunderstorm") {
         return "fas fa-bolt";
-    }
-
-    else if (weatherType === "Drizzle") {
-        return "fas fa-cloud-rain";
-    }
-
-    else if (
-        weatherType === "Mist" ||
-        weatherType === "Fog" ||
-        weatherType === "Haze"
-    ) {
-        return "fas fa-smog";
     }
 
     else {
