@@ -216,3 +216,32 @@ body{
     background:white;
     border-radius:10px;
 }
+#forecast-container{
+
+    display:flex;
+
+    gap:15px;
+
+    overflow-x:auto;
+
+    margin-top:20px;
+
+    padding-bottom:10px;
+}
+
+.forecast-card{
+
+    min-width:160px;
+
+    background:rgba(255,255,255,0.2);
+
+    padding:15px;
+
+    border-radius:12px;
+
+    color:white;
+
+    text-align:center;
+
+    flex-shrink:0;
+}
