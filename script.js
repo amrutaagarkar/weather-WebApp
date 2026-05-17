@@ -1,3 +1,10 @@
+let map = L.map('map').setView([20.5937, 78.9629], 5);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+
+let marker = L.marker([20.5937, 78.9629]).addTo(map);
 const apiKey =
 "9b14b2cbfdfa41f6b63172731261605";
 
@@ -110,14 +117,29 @@ function showWeather(data){
 
 weather.style.display = "block";
 
-const current =
-data.current;
+const current = setWeatherEffects(current.condition.text);
+
 
 const location =
 data.location;
 
 const forecast =
 data.forecast.forecastday;
+  map.setView([location.lat, location.lon], 10);
+marker.setLatLng([location.lat, location.lon]);
+
+  function startLightning(){
+  const flash = document.getElementById("lightning");
+
+  setInterval(() => {
+    if(Math.random() > 0.6){
+      flash.classList.add("flash");
+      setTimeout(()=>flash.classList.remove("flash"),300);
+    }
+  },2000);
+}
+
+  
 
 // Dynamic Background
 
