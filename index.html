@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
@@ -7,7 +8,11 @@
 <meta name="viewport"
 content="width=device-width, initial-scale=1.0">
 
-<title>Weather App</title>
+<title>Advanced Weather App</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
@@ -19,7 +24,9 @@ box-sizing:border-box;
 
 body{
 
-font-family:Arial,sans-serif;
+font-family:'Poppins',sans-serif;
+
+min-height:100vh;
 
 background:linear-gradient(
 to right,
@@ -27,87 +34,155 @@ to right,
 #a43931
 );
 
-min-height:100vh;
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
 padding:20px;
+
+color:white;
+
+transition:0.5s;
+}
+
+.dark{
+background:black;
+}
+
+.container{
+
+max-width:1200px;
+
+margin:auto;
 }
 
 .app{
 
-width:100%;
+background:rgba(255,255,255,0.12);
 
-max-width:900px;
+backdrop-filter:blur(15px);
 
-background:rgba(255,255,255,0.1);
+border-radius:25px;
 
 padding:25px;
 
-border-radius:20px;
-
-backdrop-filter:blur(10px);
-
-color:white;
+box-shadow:0 8px 32px rgba(0,0,0,0.3);
 }
 
-h1{
+.title{
 
 text-align:center;
 
-margin-bottom:20px;
+font-size:40px;
+
+margin-bottom:25px;
 }
 
-input{
+.search-box{
 
-width:100%;
+display:flex;
+
+gap:10px;
+
+flex-wrap:wrap;
+
+margin-bottom:25px;
+}
+
+.search-box input{
+
+flex:1;
 
 padding:15px;
 
 border:none;
 
-outline:none;
-
-border-radius:10px;
+border-radius:12px;
 
 font-size:18px;
 
-margin-bottom:20px;
+outline:none;
 }
-<button id="location-btn">
-Use My Location
-</button>
-#weather{
 
+.search-box button{
+
+padding:15px 20px;
+
+border:none;
+
+border-radius:12px;
+
+cursor:pointer;
+
+font-size:16px;
+
+font-weight:600;
+}
+
+#search-btn{
+background:#00b894;
+color:white;
+}
+
+#location-btn{
+background:#0984e3;
+color:white;
+}
+
+#dark-btn{
+background:#2d3436;
+color:white;
+}
+
+.weather{
 display:none;
 }
 
+.top{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+flex-wrap:wrap;
+
+gap:20px;
+}
+
 .temp{
-
-font-size:70px;
-
-font-weight:bold;
-
-margin:20px 0;
+font-size:80px;
+font-weight:700;
 }
 
 .condition{
-
-font-size:25px;
-
-margin-bottom:15px;
+font-size:24px;
+margin-top:10px;
 }
 
-.details{
-
-line-height:2;
+.main-icon img{
+width:120px;
 }
 
-.forecast-container{
+.grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+gap:20px;
+
+margin-top:30px;
+}
+
+.card{
+
+background:rgba(255,255,255,0.15);
+
+padding:20px;
+
+border-radius:20px;
+}
+
+.forecast-container,
+.hourly-container{
 
 display:flex;
 
@@ -116,11 +191,14 @@ gap:15px;
 overflow-x:auto;
 
 margin-top:20px;
+
+padding-bottom:10px;
 }
 
-.card{
+.forecast-card,
+.hour-card{
 
-min-width:140px;
+min-width:150px;
 
 background:rgba(255,255,255,0.15);
 
@@ -131,9 +209,35 @@ border-radius:15px;
 text-align:center;
 }
 
-.card img{
+canvas{
 
-width:55px;
+margin-top:25px;
+
+background:white;
+
+border-radius:15px;
+
+padding:10px;
+}
+
+@media(max-width:768px){
+
+.temp{
+font-size:60px;
+}
+
+.title{
+font-size:30px;
+}
+
+.search-box{
+flex-direction:column;
+}
+
+.search-box button{
+width:100%;
+}
+
 }
 
 </style>
@@ -142,16 +246,38 @@ width:55px;
 
 <body>
 
+<div class="container">
+
 <div class="app">
 
-<h1>Weather App</h1>
+<h1 class="title">
+Advanced Weather App
+</h1>
+
+<div class="search-box">
 
 <input
-type="text"
 id="city"
+type="text"
 placeholder="Enter city name">
 
-<div id="weather"></div>
+<button id="search-btn">
+Search
+</button>
+
+<button id="location-btn">
+My Location
+</button>
+
+<button id="dark-btn">
+Dark Mode
+</button>
+
+</div>
+
+<div class="weather" id="weather"></div>
+
+</div>
 
 </div>
 
@@ -160,31 +286,82 @@ placeholder="Enter city name">
 const apiKey =
 "9b14b2cbfdfa41f6b63172731261605";
 
-const input =
+const cityInput =
 document.getElementById("city");
 
-input.addEventListener(
-"keypress",
-function(event){
+const weather =
+document.getElementById("weather");
 
-if(event.key === "Enter"){
+// Search Button
 
-getWeather(input.value);
+document.getElementById("search-btn")
+.addEventListener("click",()=>{
+
+if(cityInput.value.trim() !== ""){
+
+getWeather(cityInput.value);
 
 }
 
+});
+
+// Enter Key
+
+cityInput.addEventListener("keypress",(e)=>{
+
+if(e.key === "Enter"){
+
+getWeather(cityInput.value);
+
 }
+
+});
+
+// Dark Mode
+
+document.getElementById("dark-btn")
+.addEventListener("click",()=>{
+
+document.body.classList.toggle("dark");
+
+});
+
+// My Location
+
+document.getElementById("location-btn")
+.addEventListener("click",()=>{
+
+navigator.geolocation.getCurrentPosition(
+
+(position)=>{
+
+const lat =
+position.coords.latitude;
+
+const lon =
+position.coords.longitude;
+
+fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${lat},${lon}&days=7&aqi=yes`)
+.then(response=>response.json())
+.then(data=>{
+
+showWeather(data);
+
+});
+
+}
+
 );
+
+});
+
+// Get Weather
 
 function getWeather(city){
 
-fetch(
-`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=no&alerts=no`
-)
-
-.then(response => response.json())
-
-.then(data => {
+fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes`)
+.then(response=>response.json())
+.then(data=>{
 
 console.log(data);
 
@@ -193,153 +370,190 @@ if(data.error){
 alert(data.error.message);
 
 return;
+
 }
 
 showWeather(data);
 
-})
-
-.catch(error => {
-
-console.log(error);
-
-alert("Weather fetch failed");
-
 });
 
 }
 
+// Show Weather
+
 function showWeather(data){
 
-const weather =
-document.getElementById("weather");
+weather.style.display = "block";
 
-weather.style.display =
-"block";
-
-let current =
+const current =
 data.current;
 
-let location =
+const location =
 data.location;
 
-let forecast =
+const forecast =
 data.forecast.forecastday;
 
 weather.innerHTML = `
 
-<h2>
+<div class="top">
 
+<div>
+
+<h2>
 ${location.name},
 ${location.country}
-
 </h2>
 
 <p>
-
 ${location.localtime}
-
 </p>
 
 <div class="temp">
-
 ${current.temp_c}°C
-
 </div>
 
 <div class="condition">
-
 ${current.condition.text}
-
-<img
-src="https:${current.condition.icon}">
+</div>
 
 </div>
 
-<div class="details">
+<div class="main-icon">
 
-Humidity:
-${current.humidity}% <br>
-
-Wind:
-${current.wind_kph} KM/H <br>
-
-Pressure:
-${current.pressure_mb} mb <br>
-
-Feels Like:
-${current.feelslike_c}°C
+<img src="https:${current.condition.icon}">
 
 </div>
 
-<hr style="margin:20px 0;">
-
-<h2>
-
-7-Day Forecast
-
-</h2>
-
-<div class="forecast-container"
-id="forecast">
-
 </div>
-`;
 
-showForecast(forecast);
-
-}
-
-function showForecast(days){
-
-const forecast =
-document.getElementById("forecast");
-
-forecast.innerHTML = "";
-
-days.forEach(day => {
-
-let date =
-new Date(day.date);
-
-forecast.innerHTML += `
+<div class="grid">
 
 <div class="card">
+<h3>Humidity</h3>
+<p>${current.humidity}%</p>
+</div>
+
+<div class="card">
+<h3>Wind</h3>
+<p>${current.wind_kph} KM/H</p>
+</div>
+
+<div class="card">
+<h3>Pressure</h3>
+<p>${current.pressure_mb} mb</p>
+</div>
+
+<div class="card">
+<h3>UV Index</h3>
+<p>${current.uv}</p>
+</div>
+
+<div class="card">
+<h3>Air Quality</h3>
+<p>${Math.round(current.air_quality.pm2_5)}</p>
+</div>
+
+<div class="card">
+<h3>Sunrise</h3>
+<p>${forecast[0].astro.sunrise}</p>
+</div>
+
+</div>
+
+<h2 style="margin-top:35px;">
+7 Day Forecast
+</h2>
+
+<div class="forecast-container">
+
+${forecast.map(day=>`
+
+<div class="forecast-card">
 
 <h3>
 
-${date.toLocaleDateString(
+${new Date(day.date).toLocaleDateString(
 'en-US',
-{
-weekday:'short'
-}
+{weekday:'short'}
 )}
 
 </h3>
 
-<img
-src="https:${day.day.condition.icon}">
+<img src="https:${day.day.condition.icon}">
 
 <p>
-
 ${day.day.avgtemp_c}°C
-
 </p>
 
 <p>
-
 ${day.day.condition.text}
-
 </p>
 
 </div>
+
+`).join("")}
+
+</div>
+
+<canvas id="tempChart"></canvas>
 `;
 
-});
+createChart(forecast);
+
+}
+
+// Temperature Chart
+
+function createChart(forecast){
+
+const labels =
+forecast.map(day=>
+new Date(day.date).toLocaleDateString(
+'en-US',
+{weekday:'short'}
+)
+);
+
+const temps =
+forecast.map(day=>
+day.day.avgtemp_c
+);
+
+new Chart(
+
+document.getElementById("tempChart"),
+
+{
+
+type:'line',
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:'Temperature °C',
+
+data:temps,
+
+borderWidth:3,
+
+tension:0.4
+
+}]
+
+}
+
+}
+
+);
 
 }
 
 </script>
 
 </body>
+
 </html>
