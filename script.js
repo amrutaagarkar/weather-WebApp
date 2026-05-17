@@ -1,472 +1,65 @@
-const apiKey =
-"9b14b2cbfdfa41f6b63172731261605";
+// MAP INIT
+let map = L.map('map').setView([20.5937, 78.9629], 5);
 
-const cityInput =
-document.getElementById("city");
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap'
+}).addTo(map);
 
-const weather =
-document.getElementById("weather");
+let radarLayers = [];
+let apiData = {};
+let animationIndex = 0;
+let animationTimer = null;
 
-// Search Button
+// LOAD RADAR DATA
+async function loadRadar() {
+  const res = await fetch("https://api.rainviewer.com/public/weather-maps.json");
+  apiData = await res.json();
 
-document.getElementById("search-btn")
-.addEventListener("click",()=>{
+  const frames = apiData.radar.past.concat(apiData.radar.nowcast);
 
-if(cityInput.value.trim() !== ""){
-
-getWeather(cityInput.value);
-
+  playRadar(frames);
 }
 
-});
+// ADD RADAR FRAME
+function addRadarLayer(frame) {
+  const layer = L.tileLayer(
+    `https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`,
+    {
+      opacity: 0.5,
+      zIndex: 10
+    }
+  );
 
-// Enter Key
-
-cityInput.addEventListener("keypress",(e)=>{
-
-if(e.key === "Enter"){
-
-getWeather(cityInput.value);
-
+  layer.addTo(map);
+  radarLayers.push(layer);
 }
 
-});
+// PLAY ANIMATION
+function playRadar(frames) {
 
-// Dark Mode
+  // clear old layers
+  radarLayers.forEach(l => map.removeLayer(l));
+  radarLayers = [];
 
-document.getElementById("dark-btn")
-.addEventListener("click",()=>{
+  if (animationTimer) clearInterval(animationTimer);
 
-document.body.classList.toggle("dark");
+  animationIndex = 0;
 
-});
+  animationTimer = setInterval(() => {
 
-// My Location
+    if (animationIndex >= frames.length) {
+      animationIndex = 0;
+    }
 
-document.getElementById("location-btn")
-.addEventListener("click",()=>{
+    radarLayers.forEach(l => map.removeLayer(l));
+    radarLayers = [];
 
-navigator.geolocation.getCurrentPosition(
+    addRadarLayer(frames[animationIndex]);
 
-(position)=>{
+    animationIndex++;
 
-const lat =
-position.coords.latitude;
-
-const lon =
-position.coords.longitude;
-
-fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${lat},${lon}&days=7&aqi=yes`)
-.then(response=>response.json())
-.then(data=>{
-
-showWeather(data);
-
-});
-
+  }, 600); // speed of animation
 }
 
-);
-
-});
-
-// Get Weather
-
-function getWeather(city){
-
-fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=7&aqi=yes`)
-.then(response=>response.json())
-.then(data=>{
-
-console.log(data);
-
-if(data.error){
-
-alert(data.error.message);
-
-return;
-
-}
-
-saveSearch(city);
-
-showWeather(data);
-
-})
-
-.catch(error=>{
-
-console.log(error);
-
-alert("Failed to fetch weather");
-
-});
-
-}
-
-// Show Weather
-
-function showWeather(data){
-
-weather.style.display = "block";
-
-const current =
-data.current;
-
-const location =
-data.location;
-
-const forecast =
-data.forecast.forecastday;
-
-// Dynamic Background
-
-changeBackground(
-current.condition.text
-);
-
-weather.innerHTML = `
-
-<div class="top">
-
-<div>
-
-<h2>
-${location.name},
-${location.country}
-</h2>
-
-<p>
-${location.localtime}
-</p>
-
-<div class="temp">
-${current.temp_c}°C
-</div>
-
-<div class="condition">
-${current.condition.text}
-</div>
-
-</div>
-
-<div class="main-icon">
-
-<img src="https:${current.condition.icon}">
-
-</div>
-
-</div>
-
-<div class="grid">
-
-<div class="card">
-<h3>Humidity</h3>
-<p>${current.humidity}%</p>
-</div>
-
-<div class="card">
-<h3>Wind</h3>
-<p>${current.wind_kph} KM/H</p>
-</div>
-
-<div class="card">
-<h3>Pressure</h3>
-<p>${current.pressure_mb} mb</p>
-</div>
-
-<div class="card">
-<h3>UV Index</h3>
-<p>${current.uv}</p>
-</div>
-
-<div class="card">
-<h3>Air Quality</h3>
-
-<p>
-${current.air_quality
-? Math.round(current.air_quality.pm2_5)
-: "N/A"}
-</p>
-
-</div>
-
-<div class="card">
-<h3>Sunrise</h3>
-<p>${forecast[0].astro.sunrise}</p>
-</div>
-
-<div class="card">
-<h3>Sunset</h3>
-<p>${forecast[0].astro.sunset}</p>
-</div>
-
-</div>
-
-<h2 style="margin-top:35px;">
-24 Hour Forecast
-</h2>
-
-<div
-class="hourly-container"
-id="hourly-container">
-</div>
-
-<h2 style="margin-top:35px;">
-7 Day Forecast
-</h2>
-
-<div class="forecast-container">
-
-${forecast.map(day=>`
-
-<div class="forecast-card">
-
-<h3>
-
-${new Date(day.date)
-.toLocaleDateString(
-'en-US',
-{weekday:'short'}
-)}
-
-</h3>
-
-<img src="https:${day.day.condition.icon}">
-
-<p>
-${day.day.avgtemp_c}°C
-</p>
-
-<p>
-${day.day.condition.text}
-</p>
-
-</div>
-
-`).join("")}
-
-</div>
-
-<canvas id="tempChart"></canvas>
-`;
-
-showHourly(
-forecast[0].hour
-);
-
-createChart(forecast);
-
-loadHistory();
-
-}
-
-// Hourly Forecast
-
-function showHourly(hourData){
-
-const container =
-document.getElementById(
-"hourly-container"
-);
-
-container.innerHTML = "";
-
-hourData.slice(0,24)
-.forEach(hour=>{
-
-let time =
-hour.time.split(" ")[1];
-
-container.innerHTML += `
-
-<div class="hour-card">
-
-<h3>
-${time}
-</h3>
-
-<img
-src="https:${hour.condition.icon}">
-
-<p>
-${hour.temp_c}°C
-</p>
-
-</div>
-`;
-
-});
-
-}
-
-// Temperature Chart
-
-function createChart(forecast){
-
-const labels =
-forecast.map(day=>
-
-new Date(day.date)
-.toLocaleDateString(
-'en-US',
-{weekday:'short'}
-)
-
-);
-
-const temps =
-forecast.map(day=>
-
-day.day.avgtemp_c
-
-);
-
-new Chart(
-
-document.getElementById(
-"tempChart"
-),
-
-{
-
-type:'line',
-
-data:{
-
-labels:labels,
-
-datasets:[{
-
-label:'Temperature °C',
-
-data:temps,
-
-borderWidth:3,
-
-tension:0.4
-
-}]
-
-}
-
-}
-
-);
-
-}
-
-// Search History
-
-function saveSearch(city){
-
-let history = JSON.parse(
-
-localStorage.getItem(
-"history"
-)
-
-) || [];
-
-if(!history.includes(city)){
-
-history.push(city);
-
-localStorage.setItem(
-
-"history",
-
-JSON.stringify(history)
-
-);
-
-}
-
-}
-
-// Load History
-
-function loadHistory(){
-
-const historyDiv =
-document.getElementById(
-"history"
-);
-
-if(!historyDiv) return;
-
-let history = JSON.parse(
-
-localStorage.getItem(
-"history"
-)
-
-) || [];
-
-historyDiv.innerHTML = "";
-
-history.reverse()
-.slice(0,5)
-.forEach(city=>{
-
-historyDiv.innerHTML += `
-
-<span
-onclick="getWeather('${city}')">
-
-${city}
-
-</span>
-`;
-
-});
-
-}
-
-// Dynamic Background
-
-function changeBackground(condition){
-
-condition =
-condition.toLowerCase();
-
-if(condition.includes("rain")){
-
-document.body.style.background =
-"linear-gradient(to right,#4b79a1,#283e51)";
-
-}
-
-else if(condition.includes("cloud")){
-
-document.body.style.background =
-"linear-gradient(to right,#757f9a,#d7dde8)";
-
-}
-
-else if(condition.includes("clear")){
-
-document.body.style.background =
-"linear-gradient(to right,#56ccf2,#2f80ed)";
-
-}
-
-else if(condition.includes("snow")){
-
-document.body.style.background =
-"linear-gradient(to right,#e6dada,#274046)";
-
-}
-
-else{
-
-document.body.style.background =
-"linear-gradient(to right,#1d4350,#a43931)";
-
-}
-
-}
-
-// Load Previous Searches
-
-loadHistory();
+// AUTO START
+loadRadar();
