@@ -20,7 +20,7 @@ searchInputBox.addEventListener("keypress", (event) => {
         getWeather(searchInputBox.value);
 
     }
-
+..........................................
 });
 // Location Button
 
@@ -43,10 +43,45 @@ fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${lat},${lon}
 showWeather(data);
 });
 
+    const darkBtn =
+document.getElementById("dark-mode-btn");
+
+darkBtn.addEventListener("click", () => {
+
+document.body.classList.toggle("dark");
+
+});
 
 );
 
 });}
+function showHourly(hourData){
+
+const hourlyContainer =
+document.getElementById("hourly-container");
+
+hourlyContainer.innerHTML = "";
+
+hourData.slice(0,24).forEach(hour => {
+
+let time = hour.time.split(" ")[1];
+
+hourlyContainer.innerHTML += `
+
+<div class="hour-card">
+
+<h3>${time}</h3>
+
+<img src="https:${hour.condition.icon}">
+
+<p>${hour.temp_c}°C</p>
+
+</div>
+`;
+
+});
+
+}
 
 
 // Get Weather
