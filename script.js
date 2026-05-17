@@ -1,65 +1,57 @@
-// MAP INIT
-let map = L.map('map').setView([20.5937, 78.9629], 5);
+let map = L.map("map", { zoomControl: true }).setView([20.59, 78.96], 5);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap'
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: "© OpenStreetMap"
 }).addTo(map);
 
+// radar state
+let radarFrames = [];
+let currentIndex = 0;
 let radarLayers = [];
-let apiData = {};
-let animationIndex = 0;
-let animationTimer = null;
 
-// LOAD RADAR DATA
+// load radar (rain + clouds)
 async function loadRadar() {
+
   const res = await fetch("https://api.rainviewer.com/public/weather-maps.json");
-  apiData = await res.json();
+  const data = await res.json();
 
-  const frames = apiData.radar.past.concat(apiData.radar.nowcast);
+  radarFrames = [
+    ...data.radar.past,
+    ...data.radar.nowcast
+  ];
 
-  playRadar(frames);
+  animateRadar();
 }
 
-// ADD RADAR FRAME
-function addRadarLayer(frame) {
-  const layer = L.tileLayer(
+// animate like Google Weather
+function animateRadar() {
+
+  if (radarLayers.length) {
+    radarLayers.forEach(l => map.removeLayer(l));
+  }
+
+  let frame = radarFrames[currentIndex];
+
+  let layer = L.tileLayer(
     `https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`,
     {
-      opacity: 0.5,
-      zIndex: 10
+      opacity: 0.55,
+      zIndex: 100
     }
-  );
+  ).addTo(map);
 
-  layer.addTo(map);
-  radarLayers.push(layer);
+  radarLayers = [layer];
+
+  currentIndex++;
+
+  if (currentIndex >= radarFrames.length) {
+    currentIndex = 0;
+  }
+
+  setTimeout(animateRadar, 450); // smooth Google-like animation speed
 }
 
-// PLAY ANIMATION
-function playRadar(frames) {
+// auto refresh every 10 min
+setInterval(loadRadar, 600000);
 
-  // clear old layers
-  radarLayers.forEach(l => map.removeLayer(l));
-  radarLayers = [];
-
-  if (animationTimer) clearInterval(animationTimer);
-
-  animationIndex = 0;
-
-  animationTimer = setInterval(() => {
-
-    if (animationIndex >= frames.length) {
-      animationIndex = 0;
-    }
-
-    radarLayers.forEach(l => map.removeLayer(l));
-    radarLayers = [];
-
-    addRadarLayer(frames[animationIndex]);
-
-    animationIndex++;
-
-  }, 600); // speed of animation
-}
-
-// AUTO START
 loadRadar();
