@@ -22,6 +22,32 @@ searchInputBox.addEventListener("keypress", (event) => {
     }
 
 });
+// Location Button
+
+const locationBtn =
+document.getElementById("location-btn");
+
+locationBtn.addEventListener("click", () => {
+
+navigator.geolocation.getCurrentPosition(
+
+(position) => {
+
+const lat = position.coords.latitude;
+
+const lon = position.coords.longitude;
+
+fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${lat},${lon}&days=7&aqi=yes&alerts=yes`)
+.then(response => response.json())
+.then(data => {
+showWeather(data);
+});
+
+
+);
+
+});}
+
 
 // Get Weather
 
