@@ -196,22 +196,31 @@ ctx.drawImage(img, point.x-12, point.y-35, 24, 24);
 
 function loadMap(lat, lon){
 
-if(!document.getElementById("map")) return;
+setTimeout(() => {
 
+const mapDiv = document.getElementById("map");
+if(!mapDiv){
+console.error("Map div not found");
+return;
+}
+
+// reset old map
 if(map){
 map.remove();
 }
 
 map = L.map('map').setView([lat, lon], 10);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-attribution:'&copy; OpenStreetMap'
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
 L.marker([lat, lon])
 .addTo(map)
-.bindPopup("Current Weather Location")
+.bindPopup("Weather Location")
 .openPopup();
+
+}, 300); // IMPORTANT delay fix
 }
 
 /* ================= HISTORY ================= */
