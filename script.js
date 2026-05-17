@@ -209,76 +209,80 @@ if(chartInstance){
 chartInstance.destroy();
 }
 
-// create gradient (this removes “plain white” look)
+// 🌈 gradient background (Apple Weather style)
 let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-gradient.addColorStop(0, "rgba(0, 184, 148, 0.7)");
+gradient.addColorStop(0, "rgba(0, 184, 148, 0.6)");
 gradient.addColorStop(1, "rgba(0, 184, 148, 0.05)");
 
-chartInstance = new Chart(ctx, {
-type: "line",
-
-data: {
+chartInstance = new Chart(ctx,{
+type:"line",
+data:{
 labels: forecast.map(d =>
-new Date(d.date).toLocaleDateString("en-US", { weekday: "short" })
+new Date(d.date).toLocaleDateString("en-US",{weekday:"short"})
 ),
 
-datasets: [{
-label: "Temperature °C",
+datasets:[{
+label:"Temperature °C",
 data: forecast.map(d => d.day.avgtemp_c),
 
-borderColor: "#00b894",
-borderWidth: 3,
-fill: true,
-backgroundColor: gradient,
+borderColor:"#00b894",
+backgroundColor:gradient,
+fill:true,
+tension:0.55,
 
-tension: 0.5,   // smooth curve
-pointRadius: 6,
-pointHoverRadius: 9,
-pointBackgroundColor: "#ffffff",
-pointBorderColor: "#00b894",
-pointBorderWidth: 3
+pointRadius:6,
+pointHoverRadius:10,
+pointBackgroundColor:"#fff",
+pointBorderColor:"#00b894",
+pointBorderWidth:3
 }]
 },
 
-options: {
-responsive: true,
-
-plugins: {
-legend: {
-labels: {
-color: "#ffffff",
-font: { size: 14 }
+options:{
+responsive:true,
+plugins:{
+legend:{labels:{color:"#fff"}},
+tooltip:{
+enabled:true,
+backgroundColor:"rgba(0,0,0,0.85)"
 }
 },
 
-tooltip: {
-backgroundColor: "rgba(0,0,0,0.85)",
-titleColor: "#fff",
-bodyColor: "#fff",
-padding: 12,
-displayColors: false
+scales:{
+x:{ticks:{color:"#fff"},grid:{color:"rgba(255,255,255,0.08)"}},
+y:{ticks:{color:"#fff"},grid:{color:"rgba(255,255,255,0.08)"}}
+},
+
+animation:{
+duration:1800,
+easing:"easeInOutQuart"
 }
 },
 
-scales: {
-x: {
-ticks: { color: "#ffffff" },
-grid: { color: "rgba(255,255,255,0.1)" }
-},
-y: {
-ticks: { color: "#ffffff" },
-grid: { color: "rgba(255,255,255,0.1)" }
-}
-},
+plugins:[{
+/* 🔥 WEATHER ICONS ON EACH POINT */
+afterDatasetsDraw(chart){
+const {ctx} = chart;
 
-animation: {
-duration: 1400,
-easing: "easeInOutQuart"
+forecast.forEach((d,i)=>{
+
+let img = new Image();
+img.src = "https:" + d.day.condition.icon;
+
+img.onload = () => {
+const meta = chart.getDatasetMeta(0);
+const point = meta.data[i];
+
+if(point){
+ctx.drawImage(img, point.x-12, point.y-35, 24, 24);
 }
-}
+};
+
 });
 }
-
+}]
+});
+}
 
 /* =========================
    💾 SEARCH HISTORY
