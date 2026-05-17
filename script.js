@@ -200,74 +200,85 @@ function render(data) {
 /* =========================
    📈 CHART
 ========================= */
-
 function createChart(forecast){
 
-const ctx = document.getElementById("chart").getContext("2d");
+const canvas = document.getElementById("chart");
+const ctx = canvas.getContext("2d");
 
-if(chartInstance) chartInstance.destroy();
+if(chartInstance){
+chartInstance.destroy();
+}
 
-// gradient background (important for pro look)
+// create gradient (this removes “plain white” look)
 let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-gradient.addColorStop(0, "rgba(0, 184, 148, 0.6)");
+gradient.addColorStop(0, "rgba(0, 184, 148, 0.7)");
 gradient.addColorStop(1, "rgba(0, 184, 148, 0.05)");
 
 chartInstance = new Chart(ctx, {
 type: "line",
+
 data: {
 labels: forecast.map(d =>
 new Date(d.date).toLocaleDateString("en-US", { weekday: "short" })
 ),
+
 datasets: [{
-label: "Temperature (°C)",
+label: "Temperature °C",
 data: forecast.map(d => d.day.avgtemp_c),
 
 borderColor: "#00b894",
-backgroundColor: gradient,
+borderWidth: 3,
 fill: true,
+backgroundColor: gradient,
+
 tension: 0.5,   // smooth curve
 pointRadius: 6,
 pointHoverRadius: 9,
-pointBackgroundColor: "#fff",
+pointBackgroundColor: "#ffffff",
+pointBorderColor: "#00b894",
 pointBorderWidth: 3
 }]
 },
 
 options: {
 responsive: true,
+
 plugins: {
 legend: {
 labels: {
-color: "#fff",
+color: "#ffffff",
 font: { size: 14 }
 }
 },
+
 tooltip: {
-backgroundColor: "rgba(0,0,0,0.8)",
+backgroundColor: "rgba(0,0,0,0.85)",
 titleColor: "#fff",
 bodyColor: "#fff",
-padding: 12
+padding: 12,
+displayColors: false
 }
 },
 
 scales: {
 x: {
-ticks: { color: "#fff" },
+ticks: { color: "#ffffff" },
 grid: { color: "rgba(255,255,255,0.1)" }
 },
 y: {
-ticks: { color: "#fff" },
+ticks: { color: "#ffffff" },
 grid: { color: "rgba(255,255,255,0.1)" }
 }
 },
 
 animation: {
-duration: 1200,
+duration: 1400,
 easing: "easeInOutQuart"
 }
 }
 });
 }
+
 
 /* =========================
    💾 SEARCH HISTORY
