@@ -411,3 +411,41 @@ min-width:130px;
 }
 
 }
+#weather-bg{
+  position:fixed;
+  width:100%;
+  height:100%;
+  z-index:-2;
+}
+
+#lightning{
+  position:fixed;
+  width:100%;
+  height:100%;
+  background:white;
+  opacity:0;
+  z-index:9999;
+  pointer-events:none;
+}
+
+.flash{
+  animation:flash 0.3s ease-in-out;
+}
+
+@keyframes flash{
+  0%{opacity:0}
+  30%{opacity:1}
+  100%{opacity:0}
+}
+
+/* MAP */
+#map{
+  height:350px;
+  border-radius:15px;
+  margin-top:20px;
+}
+
+/* STORM */
+.storm{
+  background:linear-gradient(to bottom,#1b1b1b,#2c3e50)!important;
+}
